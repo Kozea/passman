@@ -56,7 +56,7 @@ def connection():
         )
 
         for user in users:
-            if pbkdf2_sha256.verify(request.form['login'], user.mail):
+            if pbkdf2_sha256.verify(request.form['login'], user.login):
                 break
         else:
             user = None
