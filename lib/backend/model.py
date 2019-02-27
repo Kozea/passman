@@ -46,7 +46,7 @@ class GroupRequest(Base):
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    mail = Column(String, nullable=False)
+    login = Column(String, nullable=False)
     password = Column(String, nullable=False)
     public_key = Column(String, nullable=False)
     private_key = Column(String, nullable=False)
@@ -70,7 +70,6 @@ class Group(Base):
     label = Column(String, nullable=False)
 
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-
 
 
 class Db(object):
