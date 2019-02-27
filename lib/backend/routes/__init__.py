@@ -32,9 +32,11 @@ def connection():
 
         for user in users:
             if pbkdf2_sha256.verify(request.form['login'], user.login):
-                break
+                if pbkdf2_sha256.verify(input_password, user.password):
+                   break
         else:
-            user = None
+            return render_template(
+                'error.html', message='Login or password incorrect')
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id
