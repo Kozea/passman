@@ -25,8 +25,10 @@ def decrypt_password(password, session_key):
         nonce = b64decode(getattr(password, item_attr[0]))
         tag = b64decode(getattr(password, item_attr[1]))
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        items[item] = b64encode(cipher_aes.decrypt_and_verify(
-            b64decode(getattr(password, item)), tag)).decode('utf-8')
+        to_decode = b64decode(getattr(password, item))
+
+        items[item] = cipher_aes.decrypt_and_verify(
+            b64decode(getattr(password, item)), tag).decode('utf-8')
 
     return items
 
