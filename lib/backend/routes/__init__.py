@@ -4,7 +4,21 @@ from passlib.hash import pbkdf2_sha256
 
 from .. import app
 from ..model import User, Password, db
-from ..utils import decrypt_passwords, decrypt_private_key
+from ..utils import create_password, decrypt_passwords, decrypt_private_key
+
+
+@app.route('/add_password', methods=['GET', 'POST'])
+def add_password():
+    if request.method == 'POST':
+        to_encrypt = {}
+        to_encrypt['login'] = request.form['login']
+        to_encrypt['password'] = request.form['password']
+        to_encrypt['questions'] = request.form['questions']
+        create_password(session['user_id'], to_encrypt, request.form['label'])
+
+        return redirect(url_for('display_passwords'))
+
+    return render_template('add_password.html')
 
 
 @app.route('/display_passwords')

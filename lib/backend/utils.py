@@ -2,6 +2,29 @@ from base64 import b64decode, b64encode
 from Crypto.Cipher import AES, ChaCha20, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+
+from .model import User, Password, db
+
+
+def create_password(user_id, to_encrypt, label):
+    password = {}
+
+    user = db.session.query(User).get(user_id)
+    public_key = RSA.import_key(b64decode(user.public_key))
+    cipher_rsa = PKCS1_OAEP.new(public_key)
+
+    session_key = get_random_bytes(16)
+    enc_session_key = cipher_rsa.encrypt(session_key)
+
+    password['label'] = label
+    password['session_key'] = b64encode(enc_session_key).decode('ascii')
+
+    for item in to_encrypt:
+        cipher_aes = AES.new(session_key, AES.MODE_EAX)
+        password[item], password[item + '_tag'] = (
+            cipher_aes.encrypt_and_digest(to_encrypt[item].encode('utf-8')))
+        password[item + '_nonce'] = cipher_aes.nonce
 
 
 def decrypt_private_key(user, input_password):
