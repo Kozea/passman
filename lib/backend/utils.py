@@ -19,12 +19,19 @@ def create_password(user_id, to_encrypt, label):
 
     password['label'] = label
     password['session_key'] = b64encode(enc_session_key).decode('ascii')
+    password['owner_id'] = user_id
+    password['have_access_id'] = user_id
 
     for item in to_encrypt:
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
-        password[item], password[item + '_tag'] = (
+        ciphertext, tag = (
             cipher_aes.encrypt_and_digest(to_encrypt[item].encode('utf-8')))
-        password[item + '_nonce'] = cipher_aes.nonce
+        password[item + '_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
+        password[item] = b64encode(ciphertext).decode('ascii')
+        password[item + '_tag'] = b64encode(tag).decode('ascii')
+
+    db.session.add(Password(**password))
+    db.session.commit()
 
 
 def decrypt_private_key(user, input_password):
