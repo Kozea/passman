@@ -11,10 +11,17 @@ from ..utils import create_password, decrypt_passwords, decrypt_private_key
 def add_password():
     if request.method == 'POST':
         to_encrypt = {}
-        to_encrypt['login'] = request.form['login']
-        to_encrypt['password'] = request.form['password']
-        to_encrypt['questions'] = request.form['questions']
-        create_password(session['user_id'], to_encrypt, request.form['label'])
+        to_encrypt['login'] = request.form.get('login')
+        to_encrypt['password'] = request.form.get('password')
+        to_encrypt['questions'] = request.form.get('questions')
+        label = request.form.get('label')
+
+        if not to_encrypt['login'] or not to_encrypt['password'] or not label:
+            return render_template(
+                'error.html',
+                message='Label, login and password are all required')
+
+        create_password(session['user_id'], to_encrypt, label)
 
         return redirect(url_for('display_passwords'))
 
