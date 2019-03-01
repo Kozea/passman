@@ -1,10 +1,48 @@
 from base64 import b64decode, b64encode
+
+from passlib.hash import pbkdf2_sha256
 from Crypto.Cipher import AES, ChaCha20, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 
 from .model import User, Password, db
+
+
+def user_exists(login):
+    users = (
+        db.session.query(User)
+        .all()
+    )
+    exists = None
+
+    for user in users:
+        if pbkdf2_sha256.verify(login, user.login):
+            exists = user
+
+    return exists
+
+
+def create_user(login, password):
+    user = {}
+
+    key = RSA.generate(2048)
+    public_key = key.publickey().export_key()
+    private_key = key.export_key()
+
+    user['login'] = pbkdf2_sha256.hash(login)
+    user['password'] = pbkdf2_sha256.hash(password)
+    user['public_key'] = b64encode(public_key).decode('ascii')
+
+    hash_object = SHA256.new(data=password.encode('utf-8'))
+    cipher = ChaCha20.new(key=hash_object.digest())
+    ciphertext = cipher.encrypt(private_key)
+
+    user['private_key'] = b64encode(ciphertext).decode('ascii')
+    user['nonce'] = b64encode(cipher.nonce).decode('ascii')
+
+    db.session.add(User(**user))
+    db.session.commit()
 
 
 def create_password(user_id, to_encrypt, label):

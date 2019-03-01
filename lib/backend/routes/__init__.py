@@ -4,7 +4,9 @@ from passlib.hash import pbkdf2_sha256
 
 from .. import app
 from ..model import User, Password, db
-from ..utils import create_password, decrypt_passwords, decrypt_private_key
+from ..utils import (
+    create_password, create_user, decrypt_passwords, decrypt_private_key,
+    user_exists)
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
@@ -41,6 +43,26 @@ def display_passwords():
         passwords=decrypt_passwords(passwords, session['private_key']))
 
 
+@app.route('/add_user', methods=['GET', 'POST'])
+def add_user():
+    if request.method == 'POST':
+        input_mail = request.form.get('mail')
+        input_password = request.form.get('password')
+
+        if not input_mail or not input_password:
+            return render_template(
+                'error.html', message='No mail or password provided')
+        if '@' not in input_mail:
+            return render_template('error.html', message='Mail malformated')
+        if user_exists(input_mail):
+            return render_template('error.html', message='Mail already used')
+
+        create_user(input_mail, input_password)
+        return redirect(url_for('connection'))
+
+    return render_template('add_user.html')
+
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -52,16 +74,9 @@ def connection():
     if request.method == 'POST':
         input_password = request.form['password']
         
-        users = (
-            db.session.query(User)
-            .all()
-        )
+        user = user_exists(request.form.get('login'))
 
-        for user in users:
-            if pbkdf2_sha256.verify(request.form['login'], user.login):
-                if pbkdf2_sha256.verify(input_password, user.password):
-                   break
-        else:
+        if not user or pbkdf2_sha256.verify(input_password, user.login):
             return render_template(
                 'error.html', message='Login or password incorrect')
 

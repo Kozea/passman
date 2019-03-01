@@ -1,6 +1,8 @@
 {% extends '_layout.html' %}
 {% block content %}
 
+<a href="{{ url_for('add_user') }}">New user</a>
+
 <form method="POST">
   <label>Identifiant
     <input name="login"/>
