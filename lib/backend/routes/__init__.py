@@ -6,7 +6,29 @@ from .. import app
 from ..model import User, Password, db
 from ..utils import (
     create_password, create_user, decrypt_passwords, decrypt_private_key,
-    user_exists)
+    share_to_user, user_exists)
+
+
+@app.route('/share_password/<password_id>', methods=['GET', 'POST'])
+def share_password(password_id):
+    if request.method == 'POST':
+        share_mail = request.form.get('mail')
+
+        if '@' not in share_mail:
+            return render_template('error.html', message='Mail malformed')
+
+        share_user = user_exists(share_mail)
+
+        if not share_user:
+            return render_template('error.html', message='Invalid mail')
+
+        current_user = db.session.query(User).get(session['user_id'])
+        share_to_user(
+            password_id, share_user, current_user, session['private_key'])
+
+        return redirect(url_for('display_passwords'))
+
+    return render_template('share_password.html')
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
@@ -23,7 +45,8 @@ def add_password():
                 'error.html',
                 message='Label, login and password are all required')
 
-        create_password(session['user_id'], to_encrypt, label)
+        create_password(
+            session['user_id'], session['user_id'], to_encrypt, label)
 
         return redirect(url_for('display_passwords'))
 
@@ -53,7 +76,7 @@ def add_user():
             return render_template(
                 'error.html', message='No mail or password provided')
         if '@' not in input_mail:
-            return render_template('error.html', message='Mail malformated')
+            return render_template('error.html', message='Mail malformed')
         if user_exists(input_mail):
             return render_template('error.html', message='Mail already used')
 
