@@ -4,13 +4,13 @@
 <a href="{{ url_for('add_user') }}">New user</a>
 
 <form method="POST">
-  <label>Identifiant
+  <label>Login
     <input name="login"/>
   </label>
-  <label>Mdp
+  <label>Password
     <input name="password" type="password"/>
   </label>
-  <input type="submit"/>
+  <input type="submit" value="Login"/>
 </form>
 
 {% endblock %}
