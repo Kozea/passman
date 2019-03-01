@@ -81,7 +81,11 @@ def decrypt_private_key(user, input_password):
     return cipher.decrypt(encrypted_private_key)
 
 
-def decrypt_password(password, session_key):
+def decrypt_password(password, private_key):
+    rsa_private_key = RSA.import_key(private_key)
+    cipher_rsa = PKCS1_OAEP.new(rsa_private_key)
+    session_key = cipher_rsa.decrypt(b64decode(password.session_key))
+
     items = {
         'login': ['login_nonce', 'login_tag'],
         'password': ['password_nonce', 'password_tag'],
@@ -102,13 +106,9 @@ def decrypt_password(password, session_key):
 
 
 def decrypt_passwords(passwords, private_key):
-    rsa_private_key = RSA.import_key(private_key)
-
     passwords_decrypted = {}
 
     for password in passwords:
-        cipher_rsa = PKCS1_OAEP.new(rsa_private_key)
-        session_key = cipher_rsa.decrypt(b64decode(password.session_key))
-        passwords_decrypted[password.label] = decrypt_password(password, session_key)
+        passwords_decrypted[password.label] = decrypt_password(password, private_key)
 
     return passwords_decrypted
