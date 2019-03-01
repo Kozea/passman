@@ -41,6 +41,12 @@ def display_passwords():
         passwords=decrypt_passwords(passwords, session['private_key']))
 
 
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('connection'))
+
+
 @app.route('/', methods=['GET', 'POST'])
 def connection():
     if request.method == 'POST':
