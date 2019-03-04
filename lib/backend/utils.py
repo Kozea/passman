@@ -104,6 +104,7 @@ def decrypt_password(password, private_key):
             b64decode(getattr(password, item)), tag).decode('utf-8')
 
     items['id'] = password.id
+    items['label'] = password.label
 
     return items
 
