@@ -25,6 +25,7 @@ class Password(Base):
 
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     have_access_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
 
 
 class UserGroup(Base):
@@ -52,14 +53,19 @@ class User(Base):
     private_key = Column(String, nullable=False)
     nonce = Column(String, nullable=False)
 
-    groups = relationship('Group', secondary=UserGroup.__table__, backref='users')
+    groups = relationship(
+        'Group', secondary=UserGroup.__table__, backref='users'
+    )
     request = relationship(
-        'Group', secondary=GroupRequest.__table__, backref='pending_users')
+        'Group', secondary=GroupRequest.__table__, backref='pending_users'
+    )
 
     passwords_owned = relationship(
-        'Password', foreign_keys=[Password.owner_id], backref='owner')
+        'Password', foreign_keys=[Password.owner_id], backref='owner'
+    )
     passwords_accessible = relationship(
-        'Password', foreign_keys=[Password.have_access_id], backref='user')
+        'Password', foreign_keys=[Password.have_access_id], backref='user'
+    )
 
     groups_owned = relationship('Group', backref='owner')
 

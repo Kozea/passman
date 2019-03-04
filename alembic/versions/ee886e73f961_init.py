@@ -5,9 +5,8 @@ Revises:
 Create Date: 2019-02-21 18:31:37.008182
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'ee886e73f961'
@@ -17,23 +16,26 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table('user',
+    op.create_table(
+        'user',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('login', sa.String(), nullable=False),
         sa.Column('password', sa.String(), nullable=False),
         sa.Column('public_key', sa.String(), nullable=False),
         sa.Column('private_key', sa.String(), nullable=False),
         sa.Column('nonce', sa.String(), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
     )
-    op.create_table('group',
+    op.create_table(
+        'group',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('label', sa.String(), nullable=False),
         sa.Column('owner_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['owner_id'], ['user.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
-    op.create_table('password',
+    op.create_table(
+        'password',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('label', sa.String(), nullable=False),
         sa.Column('login', sa.String(), nullable=False),
@@ -48,27 +50,31 @@ def upgrade():
         sa.Column('session_key', sa.String(), nullable=False),
         sa.Column('owner_id', sa.Integer(), nullable=False),
         sa.Column('have_access_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['have_access_id'], ['user.id'], ),
-        sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('parent_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['parent_id'], ['password.id']),
+        sa.ForeignKeyConstraint(['have_access_id'], ['user.id']),
+        sa.ForeignKeyConstraint(['owner_id'], ['user.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
-    op.create_table('grouprequest',
+    op.create_table(
+        'grouprequest',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('group_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('token', sa.String(), nullable=False),
         sa.Column('timestamp', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['group_id'], ['group.id']),
+        sa.ForeignKeyConstraint(['user_id'], ['user.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
-    op.create_table('usergroup',
+    op.create_table(
+        'usergroup',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('group_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['group_id'], ['group.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['group_id'], ['group.id']),
+        sa.ForeignKeyConstraint(['user_id'], ['user.id']),
+        sa.PrimaryKeyConstraint('id'),
     )
 
 
