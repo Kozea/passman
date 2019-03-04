@@ -99,7 +99,7 @@ def connection():
         
         user = user_exists(request.form.get('login'))
 
-        if not user or pbkdf2_sha256.verify(input_password, user.login):
+        if not user or not pbkdf2_sha256.verify(input_password, user.password):
             return render_template(
                 'error.html', message='Login or password incorrect')
 
