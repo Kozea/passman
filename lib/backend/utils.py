@@ -45,7 +45,7 @@ def create_user(login, password):
     db.session.commit()
 
 
-def create_password(user_id, owner_id, to_encrypt, label):
+def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     password = {}
 
     user = db.session.query(User).get(user_id)
@@ -59,6 +59,8 @@ def create_password(user_id, owner_id, to_encrypt, label):
     password['session_key'] = b64encode(enc_session_key).decode('ascii')
     password['owner_id'] = owner_id
     password['have_access_id'] = user_id
+    if parent_id:
+        password['parent_id'] = parent_id
 
     for item in to_encrypt:
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
@@ -119,4 +121,4 @@ def share_to_user(password_id, share_user, current_user, private_key):
     decrypted_password = decrypt_password(password, private_key)
     decrypted_password.pop('id')
     create_password(
-        share_user.id, current_user.id, decrypted_password, password.label)
+        share_user.id, current_user.id, decrypted_password, password.label, password_id)
