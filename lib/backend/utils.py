@@ -45,7 +45,7 @@ def create_user(login, password):
     db.session.commit()
 
 
-def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
+def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     password = {}
 
     user = db.session.query(User).get(user_id)
@@ -70,6 +70,11 @@ def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
         password[item] = b64encode(ciphertext).decode('ascii')
         password[item + '_tag'] = b64encode(tag).decode('ascii')
 
+    return password
+
+
+def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
+    password = encrypt_password(user_id, owner_id, to_encrypt, label, parent_id)
     db.session.add(Password(**password))
     db.session.commit()
 
