@@ -6,7 +6,8 @@ from .. import app
 from ..model import User, Password, db
 from ..utils import (
     create_password, create_user, encrypt_password, decrypt_password,
-    decrypt_passwords, decrypt_private_key, share_to_user, user_exists)
+    decrypt_passwords, decrypt_private_key, share_to_user, update_password,
+    user_exists)
 
 
 @app.route('/edit_password/<password_id>', methods=['GET', 'POST'])
@@ -23,12 +24,8 @@ def edit_password(password_id):
                 'error.html',
                 message='Label, login and password are all required')
 
-        password = db.session.query(Password).get(password_id)
-        updated_password = encrypt_password(
-            session['user_id'], password.owner_id, to_encrypt, label,
-            password.parent_id)
-        db.session.query(Password).filter(Password.id == password_id).update(updated_password)
-        db.session.commit()
+        update_password(session['user_id'], password_id, label, to_encrypt)
+
         return redirect(url_for('display_passwords'))
 
     enc_password = db.session.query(Password).get(password_id)

@@ -79,6 +79,14 @@ def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     db.session.commit()
 
 
+def update_password(user_id, password_id, label, to_encrypt):
+    password = db.session.query(Password).get(password_id)
+    updated_password = encrypt_password(
+        user_id, password.owner_id, to_encrypt, label, password.parent_id)
+    db.session.query(Password).filter(Password.id == password_id).update(updated_password)
+    db.session.commit()
+
+
 def decrypt_private_key(user, input_password):
     encrypted_private_key = b64decode(user.private_key)
     nonce = b64decode(user.nonce)
