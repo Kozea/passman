@@ -130,9 +130,12 @@ def decrypt_passwords(passwords, private_key):
 
     return passwords_decrypted
 
+
 def share_to_user(password_id, share_user, current_user, private_key):
     password = db.session.query(Password).get(password_id)
     decrypted_password = decrypt_password(password, private_key)
+    # Pop items which shouldn't be encrypted
     decrypted_password.pop('id')
+    decrypted_password.pop('label')
     create_password(
         share_user.id, current_user.id, decrypted_password, password.label, password_id)
