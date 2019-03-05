@@ -24,7 +24,7 @@ def edit_password(password_id):
                 'error.html',
                 message='Label, login and password are all required')
 
-        update_password(session['user_id'], password_id, label, to_encrypt)
+        update_password(session['user_id'], password_id, label, to_encrypt, [])
 
         return redirect(url_for('display_passwords'))
 
@@ -84,7 +84,7 @@ def display_passwords():
         .filter(Password.have_access_id == session['user_id'])
         .all()
     )
-    
+
     return render_template(
         'display_passwords.html',
         passwords=decrypt_passwords(passwords, session['private_key']))

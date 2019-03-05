@@ -79,18 +79,31 @@ def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     db.session.commit()
 
 
-def update_password(user_id, password_id, label, to_encrypt):
-    password = db.session.query(Password).get(password_id)
-    updated_password = encrypt_password(
-        user_id, password.owner_id, to_encrypt, label, password.parent_id)
-    db.session.query(Password).filter(Password.id == password_id).update(updated_password)
-    db.session.commit()
+def update_password(user_id, password_id, label, to_encrypt, updated):
+    if password_id not in updated:
+        password = db.session.query(Password).get(password_id)
+        updated_password = encrypt_password(
+            user_id, password.owner_id, to_encrypt, label, password.parent_id)
+        db.session.query(Password).filter(
+            Password.id == password_id).update(updated_password)
+        db.session.commit()
 
-    children_passwords = db.session.query(Password).filter(Password.parent_id == password.id)
+        updated.append(password.id)
 
-    for child in children_passwords:
-        child_user_id = child.have_access_id
-        update_password(child_user_id, child.id, label, to_encrypt)
+        children_passwords = db.session.query(Password).filter(
+            Password.parent_id == password.id)
+
+        for child in children_passwords:
+            child_user_id = child.have_access_id
+            update_password(
+                child_user_id, child.id, label, to_encrypt, updated)
+
+        if password.parent_id:
+            parent_password = db.session.query(Password).filter(
+                Password.id == password.parent_id).one()
+            update_password(
+                parent_password.have_access_id, parent_password.id, label,
+                to_encrypt, updated)
 
 
 def decrypt_private_key(user, input_password):
