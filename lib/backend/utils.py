@@ -86,6 +86,12 @@ def update_password(user_id, password_id, label, to_encrypt):
     db.session.query(Password).filter(Password.id == password_id).update(updated_password)
     db.session.commit()
 
+    children_passwords = db.session.query(Password).filter(Password.parent_id == password.id)
+
+    for child in children_passwords:
+        child_user_id = child.have_access_id
+        update_password(child_user_id, child.id, label, to_encrypt)
+
 
 def decrypt_private_key(user, input_password):
     encrypted_private_key = b64decode(user.private_key)
