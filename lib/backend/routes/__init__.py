@@ -5,9 +5,15 @@ from passlib.hash import pbkdf2_sha256
 from .. import app
 from ..model import User, Password, db
 from ..utils import (
-    create_password, create_user, encrypt_password, decrypt_password,
-    decrypt_passwords, decrypt_private_key, share_to_user, update_password,
-    user_exists)
+    create_password,
+    create_user,
+    decrypt_password,
+    decrypt_passwords,
+    decrypt_private_key,
+    share_to_user,
+    update_password,
+    user_exists,
+)
 
 
 @app.route('/edit_password/<password_id>', methods=['GET', 'POST'])
@@ -22,7 +28,8 @@ def edit_password(password_id):
         if not to_encrypt['login'] or not to_encrypt['password'] or not label:
             return render_template(
                 'error.html',
-                message='Label, login and password are all required')
+                message='Label, login and password are all required',
+            )
 
         update_password(session['user_id'], password_id, label, to_encrypt, [])
 
@@ -48,7 +55,8 @@ def share_password(password_id):
 
         current_user = db.session.query(User).get(session['user_id'])
         share_to_user(
-            password_id, share_user, current_user, session['private_key'])
+            password_id, share_user, current_user, session['private_key']
+        )
 
         return redirect(url_for('display_passwords'))
 
@@ -67,10 +75,12 @@ def add_password():
         if not to_encrypt['login'] or not to_encrypt['password'] or not label:
             return render_template(
                 'error.html',
-                message='Label, login and password are all required')
+                message='Label, login and password are all required',
+            )
 
         create_password(
-            session['user_id'], session['user_id'], to_encrypt, label)
+            session['user_id'], session['user_id'], to_encrypt, label
+        )
 
         return redirect(url_for('display_passwords'))
 
@@ -87,7 +97,8 @@ def display_passwords():
 
     return render_template(
         'display_passwords.html',
-        passwords=decrypt_passwords(passwords, session['private_key']))
+        passwords=decrypt_passwords(passwords, session['private_key']),
+    )
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
@@ -98,7 +109,8 @@ def add_user():
 
         if not input_mail or not input_password:
             return render_template(
-                'error.html', message='No mail or password provided')
+                'error.html', message='No mail or password provided'
+            )
         if '@' not in input_mail:
             return render_template('error.html', message='Mail malformed')
         if user_exists(input_mail):
@@ -120,12 +132,13 @@ def logout():
 def connection():
     if request.method == 'POST':
         input_password = request.form['password']
-        
+
         user = user_exists(request.form.get('login'))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
             return render_template(
-                'error.html', message='Login or password incorrect')
+                'error.html', message='Login or password incorrect'
+            )
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id

@@ -1,19 +1,16 @@
 from base64 import b64decode, b64encode
 
-from passlib.hash import pbkdf2_sha256
-from Crypto.Cipher import AES, ChaCha20, PKCS1_OAEP
+from Crypto.Cipher import AES, PKCS1_OAEP, ChaCha20
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
+from passlib.hash import pbkdf2_sha256
 
-from .model import User, Password, db
+from .model import Password, User, db
 
 
 def user_exists(login):
-    users = (
-        db.session.query(User)
-        .all()
-    )
+    users = db.session.query(User).all()
     exists = None
 
     for user in users:
@@ -64,8 +61,9 @@ def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
 
     for item in to_encrypt:
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
-        ciphertext, tag = (
-            cipher_aes.encrypt_and_digest(to_encrypt[item].encode('utf-8')))
+        ciphertext, tag = cipher_aes.encrypt_and_digest(
+            to_encrypt[item].encode('utf-8')
+        )
         password[item + '_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
         password[item] = b64encode(ciphertext).decode('ascii')
         password[item + '_tag'] = b64encode(tag).decode('ascii')
@@ -74,7 +72,9 @@ def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
 
 
 def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
-    password = encrypt_password(user_id, owner_id, to_encrypt, label, parent_id)
+    password = encrypt_password(
+        user_id, owner_id, to_encrypt, label, parent_id
+    )
     db.session.add(Password(**password))
     db.session.commit()
 
@@ -83,27 +83,38 @@ def update_password(user_id, password_id, label, to_encrypt, updated):
     if password_id not in updated:
         password = db.session.query(Password).get(password_id)
         updated_password = encrypt_password(
-            user_id, password.owner_id, to_encrypt, label, password.parent_id)
-        db.session.query(Password).filter(
-            Password.id == password_id).update(updated_password)
+            user_id, password.owner_id, to_encrypt, label, password.parent_id
+        )
+        db.session.query(Password).filter(Password.id == password_id).update(
+            updated_password
+        )
         db.session.commit()
 
         updated.append(password.id)
 
         children_passwords = db.session.query(Password).filter(
-            Password.parent_id == password.id)
+            Password.parent_id == password.id
+        )
 
         for child in children_passwords:
             child_user_id = child.have_access_id
             update_password(
-                child_user_id, child.id, label, to_encrypt, updated)
+                child_user_id, child.id, label, to_encrypt, updated
+            )
 
         if password.parent_id:
-            parent_password = db.session.query(Password).filter(
-                Password.id == password.parent_id).one()
+            parent_password = (
+                db.session.query(Password)
+                .filter(Password.id == password.parent_id)
+                .one()
+            )
             update_password(
-                parent_password.have_access_id, parent_password.id, label,
-                to_encrypt, updated)
+                parent_password.have_access_id,
+                parent_password.id,
+                label,
+                to_encrypt,
+                updated,
+            )
 
 
 def decrypt_private_key(user, input_password):
@@ -131,9 +142,9 @@ def decrypt_password(password, private_key):
         nonce = b64decode(getattr(password, item_attr[0]))
         tag = b64decode(getattr(password, item_attr[1]))
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        to_decode = b64decode(getattr(password, item))
         items[item] = cipher_aes.decrypt_and_verify(
-            b64decode(getattr(password, item)), tag).decode('utf-8')
+            b64decode(getattr(password, item)), tag
+        ).decode('utf-8')
 
     items['id'] = password.id
     items['label'] = password.label
@@ -145,7 +156,9 @@ def decrypt_passwords(passwords, private_key):
     passwords_decrypted = {}
 
     for password in passwords:
-        passwords_decrypted[password.label] = decrypt_password(password, private_key)
+        passwords_decrypted[password.label] = decrypt_password(
+            password, private_key
+        )
 
     return passwords_decrypted
 
@@ -157,4 +170,9 @@ def share_to_user(password_id, share_user, current_user, private_key):
     decrypted_password.pop('id')
     decrypted_password.pop('label')
     create_password(
-        share_user.id, current_user.id, decrypted_password, password.label, password_id)
+        share_user.id,
+        current_user.id,
+        decrypted_password,
+        password.label,
+        password_id,
+    )

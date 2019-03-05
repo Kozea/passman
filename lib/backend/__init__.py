@@ -4,7 +4,6 @@ import os
 import sqlite3
 from pathlib import Path
 
-from datetime import date
 from urllib.parse import urlparse
 
 from flask import Flask
@@ -31,9 +30,7 @@ def install_dev_data(app=app):
     filename = urlparse(app.config['DB']).path
     connection = sqlite3.connect(filename)
     sql_folder = Path(app.root_path) / 'sql'
-    connection.executescript(
-        (sql_folder / 'test.sql').open().read()
-    )
+    connection.executescript((sql_folder / 'test.sql').open().read())
     connection.commit()
 
 
@@ -57,4 +54,3 @@ if app.debug:
         logging.getLogger('werkzeug').setLevel(level)
 
 from .routes import *  # noqa isort:skip
-
