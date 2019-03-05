@@ -5,8 +5,35 @@ from passlib.hash import pbkdf2_sha256
 from .. import app
 from ..model import User, Password, db
 from ..utils import (
-    create_password, create_user, decrypt_passwords, decrypt_private_key,
-    share_to_user, user_exists)
+    create_password, create_user, encrypt_password, decrypt_password,
+    decrypt_passwords, decrypt_private_key, share_to_user, user_exists)
+
+
+@app.route('/edit_password/<password_id>', methods=['GET', 'POST'])
+def edit_password(password_id):
+    if request.method == 'POST':
+        to_encrypt = {}
+        to_encrypt['login'] = request.form.get('login')
+        to_encrypt['password'] = request.form.get('password')
+        to_encrypt['questions'] = request.form.get('questions')
+        label = request.form.get('label')
+
+        if not to_encrypt['login'] or not to_encrypt['password'] or not label:
+            return render_template(
+                'error.html',
+                message='Label, login and password are all required')
+
+        password = db.session.query(Password).get(password_id)
+        updated_password = encrypt_password(
+            session['user_id'], password.owner_id, to_encrypt, label,
+            password.parent_id)
+        db.session.query(Password).filter(Password.id == password_id).update(updated_password)
+        db.session.commit()
+        return redirect(url_for('display_passwords'))
+
+    enc_password = db.session.query(Password).get(password_id)
+    password = decrypt_password(enc_password, session['private_key'])
+    return render_template('edit_password.html', password=password)
 
 
 @app.route('/share_password/<password_id>', methods=['GET', 'POST'])
