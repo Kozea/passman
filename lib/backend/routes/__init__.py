@@ -90,9 +90,7 @@ def add_password():
 @app.route('/display_passwords')
 def display_passwords():
     passwords = (
-        db.session.query(Password)
-        .filter(Password.have_access_id == session['user_id'])
-        .all()
+        db.session.query(User).get(session['user_id']).passwords_accessible
     )
 
     return render_template(
