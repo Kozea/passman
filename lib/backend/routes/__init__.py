@@ -5,6 +5,7 @@ from passlib.hash import pbkdf2_sha256
 from .. import app
 from ..model import Group, Password, User, db
 from ..utils import (
+    create_group,
     create_password,
     create_user,
     decrypt_password,
@@ -122,6 +123,19 @@ def display_groups():
     return render_template(
         'display_groups.html', groups=all_groups, owned=owned_groups
     )
+
+
+@app.route('/add_group', methods=['GET', 'POST'])
+def add_group():
+    if request.method == 'POST':
+        if not request.form.get('label'):
+            return render_template('error.html', message='Label is required')
+
+        create_group(session['user_id'], request.form)
+
+        return redirect(url_for('display_groups'))
+
+    return render_template('add_group.html')
 
 
 @app.route('/add_user', methods=['GET', 'POST'])

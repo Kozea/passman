@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, Password, User, db
+from .model import Group, Password, User, UserGroup, db
 
 
 def user_exists(login):
@@ -183,4 +183,14 @@ def share_to_user(password_id, share_user, current_user, private_key):
 def update_group(group_id, form):
     current_group = db.session.query(Group).get(group_id)
     current_group.label = form['label']
+    db.session.commit()
+
+
+def create_group(owner_id, form):
+    group = Group(label=form['label'], owner_id=owner_id)
+    db.session.add(group)
+    db.session.flush()
+
+    usergroup = UserGroup(group_id=group.id, user_id=owner_id)
+    db.session.add(usergroup)
     db.session.commit()
