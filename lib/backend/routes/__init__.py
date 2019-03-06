@@ -3,7 +3,7 @@ from flask import redirect, render_template, request, session, url_for
 from passlib.hash import pbkdf2_sha256
 
 from .. import app
-from ..model import User, Password, db
+from ..model import Group, Password, User, db
 from ..utils import (
     create_password,
     create_user,
@@ -11,6 +11,7 @@ from ..utils import (
     decrypt_passwords,
     decrypt_private_key,
     share_to_user,
+    update_group,
     update_password,
     user_exists,
 )
@@ -96,6 +97,30 @@ def display_passwords():
     return render_template(
         'display_passwords.html',
         passwords=decrypt_passwords(passwords, session['private_key']),
+    )
+
+
+@app.route('/edit_group/<group_id>', methods=['GET', 'POST'])
+def edit_group(group_id):
+    if request.method == 'POST':
+        if not request.form.get('label'):
+            return render_template('error.html', message='Label is required')
+
+        update_group(group_id, request.form)
+
+        return redirect(url_for('display_groups'))
+
+    group = db.session.query(Group).get(group_id)
+    return render_template('edit_group.html', group=group)
+
+
+@app.route('/display_groups')
+def display_groups():
+    all_groups = db.session.query(User).get(session['user_id']).groups
+    owned_groups = db.session.query(User).get(session['user_id']).groups_owned
+
+    return render_template(
+        'display_groups.html', groups=all_groups, owned=owned_groups
     )
 
 
