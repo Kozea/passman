@@ -79,7 +79,9 @@ def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     db.session.commit()
 
 
-def update_password(user_id, password_id, label, to_encrypt, updated):
+def update_password(user_id, password_id, label, to_encrypt, updated=None):
+    if not updated:
+        updated = []
     if password_id not in updated:
         password = db.session.query(Password).get(password_id)
         updated_password = encrypt_password(

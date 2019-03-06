@@ -33,7 +33,7 @@ def edit_password(password_id):
                 message='Label, login and password are all required',
             )
 
-        update_password(session['user_id'], password_id, label, to_encrypt, [])
+        update_password(session['user_id'], password_id, label, to_encrypt)
 
         return redirect(url_for('display_passwords'))
 
