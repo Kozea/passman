@@ -170,7 +170,7 @@ def decrypt_passwords(passwords, private_key):
     passwords_decrypted = {}
 
     for password in passwords:
-        passwords_decrypted[password.label] = decrypt_password(
+        passwords_decrypted[password.id] = decrypt_password(
             password, private_key
         )
 
