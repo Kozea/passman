@@ -19,7 +19,7 @@ from ..utils import (
 )
 
 
-@app.route('/edit_password/<password_id>', methods=['GET', 'POST'])
+@app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
 def edit_password(password_id):
     if request.method == 'POST':
         to_encrypt = {}
@@ -123,7 +123,7 @@ def display_passwords():
     )
 
 
-@app.route('/edit_group/<group_id>', methods=['GET', 'POST'])
+@app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
 def edit_group(group_id):
     if request.method == 'POST':
         if not request.form.get('label'):
