@@ -42,7 +42,9 @@ def create_user(login, password):
     db.session.commit()
 
 
-def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
+def encrypt_password(
+    user_id, owner_id, to_encrypt, label, parent_id=None, group_id=None
+):
     password = {}
 
     user = db.session.query(User).get(user_id)
@@ -59,6 +61,9 @@ def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     if parent_id:
         password['parent_id'] = parent_id
 
+    if group_id:
+        password['group_id'] = group_id
+
     for item in to_encrypt:
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
         ciphertext, tag = cipher_aes.encrypt_and_digest(
@@ -71,9 +76,11 @@ def encrypt_password(user_id, owner_id, to_encrypt, label, parent_id=None):
     return password
 
 
-def create_password(user_id, owner_id, to_encrypt, label, parent_id=None):
+def create_password(
+    user_id, owner_id, to_encrypt, label, parent_id=None, group_id=None
+):
     password = encrypt_password(
-        user_id, owner_id, to_encrypt, label, parent_id
+        user_id, owner_id, to_encrypt, label, parent_id, group_id
     )
     db.session.add(Password(**password))
     db.session.commit()
@@ -85,7 +92,12 @@ def update_password(user_id, password_id, label, to_encrypt, updated=None):
     if password_id not in updated:
         password = db.session.query(Password).get(password_id)
         updated_password = encrypt_password(
-            user_id, password.owner_id, to_encrypt, label, password.parent_id
+            user_id,
+            password.owner_id,
+            to_encrypt,
+            label,
+            password.parent_id,
+            password.group_id,
         )
         db.session.query(Password).filter(Password.id == password_id).update(
             updated_password

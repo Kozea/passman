@@ -26,6 +26,7 @@ class Password(Base):
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     have_access_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
+    group_id = Column(Integer, ForeignKey('group.id'), nullable=True)
 
 
 class UserGroup(Base):
