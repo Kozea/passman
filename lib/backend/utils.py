@@ -177,24 +177,44 @@ def decrypt_passwords(passwords, private_key):
     return passwords_decrypted
 
 
+def is_known(password_id, passwords):
+    parents = []
+    found = False
+
+    for password in passwords:
+        if password_id == password.parent_id:
+            found = True
+            break
+        if password.parent_id:
+            parents.append(db.session.query(Password).get(password.parent_id))
+
+    if not found and parents:
+        is_known(password_id, parents)
+
+    return found
+
+
 def share_to_user(
     password_id, share_user, current_user, private_key, group_id=None
 ):
-    password = db.session.query(Password).get(password_id)
-    decrypted_password = decrypt_password(password, private_key)
+    password_is_known = is_known(password_id, share_user.passwords_accessible)
 
-    # Pop items which shouldn't be encrypted
-    decrypted_password.pop('id')
-    decrypted_password.pop('label')
+    if not password_is_known:
+        password = db.session.query(Password).get(password_id)
+        decrypted_password = decrypt_password(password, private_key)
 
-    create_password(
-        share_user.id,
-        current_user.id,
-        decrypted_password,
-        password.label,
-        password_id,
-        group_id,
-    )
+        # Pop items which shouldn't be encrypted
+        decrypted_password.pop('id')
+        decrypted_password.pop('label')
+
+        create_password(
+            share_user.id,
+            current_user.id,
+            decrypted_password,
+            password.label,
+            password_id,
+            group_id,
+        )
 
 
 def share_to_group(password_id, groups, current_user, private_key):

@@ -43,7 +43,7 @@ def edit_password(password_id):
     return render_template('edit_password.html', password=password)
 
 
-@app.route('/share_password_group/<password_id>', methods=['GET', 'POST'])
+@app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
 def share_password_group(password_id, group_id=None):
     if request.method == 'POST':
         if request.form:
@@ -58,7 +58,7 @@ def share_password_group(password_id, group_id=None):
     return render_template('share_password_group.html', groups=groups)
 
 
-@app.route('/share_password/<password_id>', methods=['GET', 'POST'])
+@app.route('/share_password/<int:password_id>', methods=['GET', 'POST'])
 def share_password(password_id):
     if request.method == 'POST':
         share_mail = request.form.get('mail')
@@ -72,6 +72,12 @@ def share_password(password_id):
             return render_template('error.html', message='Invalid mail')
 
         current_user = db.session.query(User).get(session['user_id'])
+
+        if share_user.id == current_user.id:
+            return render_template(
+                'error.html', message='Can\'t share to yourself'
+            )
+
         share_to_user(
             password_id, share_user, current_user, session['private_key']
         )
