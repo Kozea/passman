@@ -40,6 +40,7 @@ def edit_password(password_id):
 
     enc_password = db.session.query(Password).get(password_id)
     password = decrypt_password(enc_password, session['private_key'])
+
     return render_template('edit_password.html', password=password)
 
 
@@ -55,6 +56,7 @@ def share_password_group(password_id, group_id=None):
         return redirect(url_for('display_passwords'))
 
     groups = db.session.query(User).get(session['user_id']).groups
+
     return render_template('share_password_group.html', groups=groups)
 
 
@@ -134,6 +136,7 @@ def edit_group(group_id):
         return redirect(url_for('display_groups'))
 
     group = db.session.query(Group).get(group_id)
+
     return render_template('edit_group.html', group=group)
 
 
@@ -176,6 +179,7 @@ def add_user():
             return render_template('error.html', message='Mail already used')
 
         create_user(input_mail, input_password)
+
         return redirect(url_for('connection'))
 
     return render_template('add_user.html')
@@ -201,6 +205,7 @@ def connection():
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id
+
         return redirect(url_for('display_passwords'))
 
     return render_template('connection.html')
