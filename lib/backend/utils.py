@@ -177,7 +177,9 @@ def decrypt_passwords(passwords, private_key):
     return passwords_decrypted
 
 
-def share_to_user(password_id, share_user, current_user, private_key):
+def share_to_user(
+    password_id, share_user, current_user, private_key, group_id=None
+):
     password = db.session.query(Password).get(password_id)
     decrypted_password = decrypt_password(password, private_key)
 
@@ -191,7 +193,27 @@ def share_to_user(password_id, share_user, current_user, private_key):
         decrypted_password,
         password.label,
         password_id,
+        group_id,
     )
+
+
+def share_to_group(password_id, groups, current_user, private_key):
+    for group_id in groups:
+        users_in_group = db.session.query(UserGroup).filter(
+            UserGroup.group_id == group_id
+        )
+
+        if users_in_group.count() > 1:
+            for user in users_in_group:
+                if user.user_id != current_user.id:
+                    share_user = db.session.query(User).get(user.user_id)
+                    share_to_user(
+                        password_id,
+                        share_user,
+                        current_user,
+                        private_key,
+                        group_id,
+                    )
 
 
 def update_group(group_id, form):

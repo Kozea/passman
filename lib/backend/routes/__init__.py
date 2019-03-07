@@ -11,6 +11,7 @@ from ..utils import (
     decrypt_password,
     decrypt_passwords,
     decrypt_private_key,
+    share_to_group,
     share_to_user,
     update_group,
     update_password,
@@ -40,6 +41,21 @@ def edit_password(password_id):
     enc_password = db.session.query(Password).get(password_id)
     password = decrypt_password(enc_password, session['private_key'])
     return render_template('edit_password.html', password=password)
+
+
+@app.route('/share_password_group/<password_id>', methods=['GET', 'POST'])
+def share_password_group(password_id, group_id=None):
+    if request.method == 'POST':
+        if request.form:
+            current_user = db.session.query(User).get(session['user_id'])
+            share_to_group(
+                password_id, request.form, current_user, session['private_key']
+            )
+
+        return redirect(url_for('display_passwords'))
+
+    groups = db.session.query(User).get(session['user_id']).groups
+    return render_template('share_password_group.html', groups=groups)
 
 
 @app.route('/share_password/<password_id>', methods=['GET', 'POST'])
