@@ -20,6 +20,22 @@ def user_exists(login):
     return exists
 
 
+def update_user(user_id, form, private_key=None):
+    user = db.session.query(User).get(user_id)
+
+    if form['mail']:
+        user.login = pbkdf2_sha256.hash(form['mail'])
+    if form['password']:
+        user.password = pbkdf2_sha256.hash(form['password'])
+        hash_object = SHA256.new(data=form['password'].encode('utf-8'))
+        cipher = ChaCha20.new(key=hash_object.digest())
+        ciphertext = cipher.encrypt(private_key)
+        user.private_key = b64encode(ciphertext).decode('ascii')
+        user.nonce = b64encode(cipher.nonce).decode('ascii')
+
+    db.session.commit()
+
+
 def create_user(login, password):
     user = {}
 

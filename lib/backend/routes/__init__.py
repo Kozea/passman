@@ -15,6 +15,7 @@ from ..utils import (
     share_to_user,
     update_group,
     update_password,
+    update_user,
     user_exists,
 )
 
@@ -161,6 +162,21 @@ def add_group():
         return redirect(url_for('display_groups'))
 
     return render_template('add_group.html')
+
+
+@app.route('/edit_user', methods=['GET', 'POST'])
+def edit_user():
+    if request.method == 'POST':
+        if request.form['password']:
+            update_user(
+                session['user_id'], request.form, session['private_key']
+            )
+        else:
+            update_user(session['user_id'], request.form)
+
+        return redirect(url_for('display_passwords'))
+
+    return render_template('edit_user.html')
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
