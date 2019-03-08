@@ -167,6 +167,8 @@ def add_group():
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
     if request.method == 'POST':
+        if user_exists(request.form['mail']):
+            return render_template('error.html', message='Mail already used')
         if request.form['password']:
             update_user(
                 session['user_id'], request.form, session['private_key']
