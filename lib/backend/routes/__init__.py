@@ -11,6 +11,7 @@ from ..utils import (
     decrypt_password,
     decrypt_passwords,
     decrypt_private_key,
+    remove_group,
     share_to_group,
     share_to_user,
     update_group,
@@ -124,6 +125,22 @@ def display_passwords():
         'display_passwords.html',
         passwords=decrypt_passwords(passwords, session['private_key']),
     )
+
+
+@app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
+def delete_group(group_id):
+    group = db.session.query(Group).get(group_id)
+
+    if group.owner_id != session['user_id']:
+        return render_template(
+            'error.html', message='It is not your group, leave it alone'
+        )
+
+    if request.method == 'POST':
+        remove_group(group_id)
+        return redirect(url_for('display_passwords'))
+
+    return render_template('delete_group.html', group=group)
 
 
 @app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
