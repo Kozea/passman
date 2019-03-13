@@ -97,7 +97,7 @@ def create_password(
 
 
 def update_password(
-        user_id, password_id, label, to_encrypt, updated=None, commit=True
+    user_id, password_id, label, to_encrypt, updated=None, commit=True
 ):
     if updated is None:
         updated = []
@@ -175,7 +175,7 @@ def is_already_shared(password_id, passwords):
         return True
     return is_already_shared(
         password_id,
-        [password.parent for password in passwords if password.parent]
+        [password.parent for password in passwords if password.parent],
     )
 
 
