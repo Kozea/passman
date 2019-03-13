@@ -1,4 +1,12 @@
-from flask import redirect, render_template, request, session, url_for
+from flask import (
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 from passlib.hash import pbkdf2_sha256
 
@@ -12,7 +20,7 @@ from ..utils import (
     decrypt_passwords,
     decrypt_private_key,
     remove_group,
-    share_to_group,
+    share_to_groups,
     share_to_user,
     update_group,
     update_password,
@@ -24,25 +32,22 @@ from ..utils import (
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
 def edit_password(password_id):
     if request.method == 'POST':
-        to_encrypt = {}
-        to_encrypt['login'] = request.form.get('login')
-        to_encrypt['password'] = request.form.get('password')
-        to_encrypt['questions'] = request.form.get('questions')
+        to_encrypt = {
+            'login': request.form.get('login'),
+            'password': request.form.get('password'),
+            'questions': request.form.get('questions'),
+        }
         label = request.form.get('label')
 
         if not to_encrypt['login'] or not to_encrypt['password'] or not label:
-            return render_template(
-                'error.html',
-                message='Label, login and password are all required',
-            )
+            flash('Label, login and password are all required', 'error')
+            return redirect(url_for('edit_password', password_id=password_id))
 
         update_password(session['user_id'], password_id, label, to_encrypt)
-
         return redirect(url_for('display_passwords'))
 
-    enc_password = db.session.query(Password).get(password_id)
-    password = decrypt_password(enc_password, session['private_key'])
-
+    encrypted_password = db.session.query(Password).get(password_id)
+    password = decrypt_password(encrypted_password, session['private_key'])
     return render_template('edit_password.html', password=password)
 
 
@@ -51,14 +56,12 @@ def share_password_group(password_id, group_id=None):
     if request.method == 'POST':
         if request.form:
             current_user = db.session.query(User).get(session['user_id'])
-            share_to_group(
+            share_to_groups(
                 password_id, request.form, current_user, session['private_key']
             )
-
         return redirect(url_for('display_passwords'))
 
     groups = db.session.query(User).get(session['user_id']).groups
-
     return render_template('share_password_group.html', groups=groups)
 
 
@@ -66,26 +69,25 @@ def share_password_group(password_id, group_id=None):
 def share_password(password_id):
     if request.method == 'POST':
         share_mail = request.form.get('mail')
-
-        if '@' not in share_mail:
-            return render_template('error.html', message='Mail malformed')
-
         share_user = user_exists(share_mail)
 
+        if not share_mail:
+            flash('Mail is required', 'error')
+            return redirect(url_for('share_password', password_id=password_id))
+        if '@' not in share_mail:
+            flash('Mail malformed', 'error')
+            return redirect(url_for('share_password', password_id=password_id))
         if not share_user:
-            return render_template('error.html', message='Invalid mail')
+            flash('Invalid mail', 'error')
+            return redirect(url_for('share_password', password_id=password_id))
+        if share_user.id == session['user_id']:
+            flash('Can’t share to yourself', 'error')
+            return redirect(url_for('share_password', password_id=password_id))
 
-        current_user = db.session.query(User).get(session['user_id'])
-
-        if share_user.id == current_user.id:
-            return render_template(
-                'error.html', message='Can\'t share to yourself'
-            )
-
+        current_user = db.session.query(User).get()
         share_to_user(
             password_id, share_user, current_user, session['private_key']
         )
-
         return redirect(url_for('display_passwords'))
 
     return render_template('share_password.html')
@@ -94,22 +96,20 @@ def share_password(password_id):
 @app.route('/add_password', methods=['GET', 'POST'])
 def add_password():
     if request.method == 'POST':
-        to_encrypt = {}
-        to_encrypt['login'] = request.form.get('login')
-        to_encrypt['password'] = request.form.get('password')
-        to_encrypt['questions'] = request.form.get('questions')
+        to_encrypt = {
+            'login': request.form.get('login'),
+            'password': request.form.get('password'),
+            'questions': request.form.get('questions'),
+        }
         label = request.form.get('label')
 
         if not to_encrypt['login'] or not to_encrypt['password'] or not label:
-            return render_template(
-                'error.html',
-                message='Label, login and password are all required',
-            )
+            flash('Label, login and password are all required', 'error')
+            return redirect(url_for('add_password'))
 
         create_password(
             session['user_id'], session['user_id'], to_encrypt, label
         )
-
         return redirect(url_for('display_passwords'))
 
     return render_template('add_password.html')
@@ -120,7 +120,6 @@ def display_passwords():
     passwords = (
         db.session.query(User).get(session['user_id']).passwords_accessible
     )
-
     return render_template(
         'display_passwords.html',
         passwords=decrypt_passwords(passwords, session['private_key']),
@@ -130,11 +129,8 @@ def display_passwords():
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
 def delete_group(group_id):
     group = db.session.query(Group).get(group_id)
-
-    if group.owner_id != session['user_id']:
-        return render_template(
-            'error.html', message='It is not your group, leave it alone'
-        )
+    if not group or group.owner_id != session['user_id']:
+        return abort(404)
 
     if request.method == 'POST':
         remove_group(group_id)
@@ -145,26 +141,26 @@ def delete_group(group_id):
 
 @app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
 def edit_group(group_id):
+    group = db.session.query(Group).get(group_id)
+    if group is None:
+        return abort(404)
+
     if request.method == 'POST':
         if not request.form.get('label'):
-            return render_template('error.html', message='Label is required')
+            flash('Label is required', 'error')
+            return redirect(url_for('edit_group', group_id=group_id))
 
-        update_group(group_id, request.form)
-
+        update_group(group_id, request.form['label'])
         return redirect(url_for('display_groups'))
-
-    group = db.session.query(Group).get(group_id)
 
     return render_template('edit_group.html', group=group)
 
 
 @app.route('/display_groups')
 def display_groups():
-    all_groups = db.session.query(User).get(session['user_id']).groups
-    owned_groups = db.session.query(User).get(session['user_id']).groups_owned
-
+    user = db.session.query(User).get(session['user_id'])
     return render_template(
-        'display_groups.html', groups=all_groups, owned=owned_groups
+        'display_groups.html', groups=user.groups, owned=user.groups_owned
     )
 
 
@@ -172,10 +168,10 @@ def display_groups():
 def add_group():
     if request.method == 'POST':
         if not request.form.get('label'):
-            return render_template('error.html', message='Label is required')
+            flash('Label is required', 'error')
+            return redirect(url_for('add_group'))
 
         create_group(session['user_id'], request.form)
-
         return redirect(url_for('display_groups'))
 
     return render_template('add_group.html')
@@ -185,14 +181,15 @@ def add_group():
 def edit_user():
     if request.method == 'POST':
         if user_exists(request.form['mail']):
-            return render_template('error.html', message='Mail already used')
+            flash('Mail already used', 'error')
+            return redirect(url_for('edit_user'))
+
         if request.form['password']:
             update_user(
                 session['user_id'], request.form, session['private_key']
             )
         else:
             update_user(session['user_id'], request.form)
-
         return redirect(url_for('display_passwords'))
 
     return render_template('edit_user.html')
@@ -205,17 +202,17 @@ def add_user():
         input_password = request.form.get('password')
 
         if not input_mail or not input_password:
-            return render_template(
-                'error.html', message='No mail or password provided'
-            )
+            flash('No mail or password provided', 'error')
+            return redirect(url_for('add_user'))
         if '@' not in input_mail:
-            return render_template('error.html', message='Mail malformed')
+            flash('Mail malformed', 'error')
+            return redirect(url_for('add_user'))
         if user_exists(input_mail):
-            return render_template('error.html', message='Mail already used')
+            flash('Mail already used', 'error')
+            return redirect(url_for('add_user'))
 
         create_user(input_mail, input_password)
-
-        return redirect(url_for('connection'))
+        return redirect(url_for('connect'))
 
     return render_template('add_user.html')
 
@@ -223,24 +220,21 @@ def add_user():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('connection'))
+    return redirect(url_for('connect'))
 
 
 @app.route('/', methods=['GET', 'POST'])
-def connection():
+def connect():
     if request.method == 'POST':
         input_password = request.form['password']
-
         user = user_exists(request.form.get('login'))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
-            return render_template(
-                'error.html', message='Login or password incorrect'
-            )
+            flash('Login or password incorrect', 'error')
+            return redirect(url_for('connect'))
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id
-
         return redirect(url_for('display_passwords'))
 
     return render_template('connection.html')

@@ -28,6 +28,8 @@ class Password(Base):
     parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
     group_id = Column(Integer, ForeignKey('group.id'), nullable=True)
 
+    parent = relationship('Password', remote_side=[id], backref='children')
+
 
 class UserGroup(Base):
     __tablename__ = 'usergroup'

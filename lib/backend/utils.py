@@ -10,21 +10,15 @@ from .model import Group, GroupRequest, Password, User, UserGroup, db
 
 
 def user_exists(login):
-    users = db.session.query(User).all()
-    exists = None
-
-    for user in users:
+    for user in db.session.query(User):
         if pbkdf2_sha256.verify(login, user.login):
-            exists = user
-
-    return exists
+            return user
 
 
 def encrypt_private_key(password, private_key):
     hash_object = SHA256.new(data=password.encode('utf-8'))
     cipher = ChaCha20.new(key=hash_object.digest())
     ciphertext = cipher.encrypt(private_key)
-
     return ciphertext, cipher.nonce
 
 
@@ -36,31 +30,29 @@ def update_user(user_id, form, private_key=None):
     if form['password']:
         user.password = pbkdf2_sha256.hash(form['password'])
 
-        encrypted_private_key = encrypt_private_key(
+        encrypted_private_key, nonce = encrypt_private_key(
             form['password'], private_key
         )
 
-        user.private_key = b64encode(encrypted_private_key[0]).decode('ascii')
-        user.nonce = b64encode(encrypted_private_key[1]).decode('ascii')
+        user.private_key = b64encode(encrypted_private_key).decode('ascii')
+        user.nonce = b64encode(nonce).decode('ascii')
 
     db.session.commit()
 
 
 def create_user(login, password):
-    user = {}
-
     key = RSA.generate(2048)
     public_key = key.publickey().export_key()
     private_key = key.export_key()
+    encrypted_private_key, nonce = encrypt_private_key(password, private_key)
 
-    user['login'] = pbkdf2_sha256.hash(login)
-    user['password'] = pbkdf2_sha256.hash(password)
-    user['public_key'] = b64encode(public_key).decode('ascii')
-
-    encrypted_private_key = encrypt_private_key(password, private_key)
-
-    user['private_key'] = b64encode(encrypted_private_key[0]).decode('ascii')
-    user['nonce'] = b64encode(encrypted_private_key[1]).decode('ascii')
+    user = {
+        'login': pbkdf2_sha256.hash(login),
+        'password': pbkdf2_sha256.hash(password),
+        'public_key': b64encode(public_key).decode('ascii'),
+        'private_key': b64encode(encrypted_private_key).decode('ascii'),
+        'nonce': b64encode(nonce).decode('ascii'),
+    }
 
     db.session.add(User(**user))
     db.session.commit()
@@ -69,33 +61,27 @@ def create_user(login, password):
 def encrypt_password(
     user_id, owner_id, to_encrypt, label, parent_id=None, group_id=None
 ):
-    password = {}
-
     user = db.session.query(User).get(user_id)
     public_key = RSA.import_key(b64decode(user.public_key))
     cipher_rsa = PKCS1_OAEP.new(public_key)
-
     session_key = get_random_bytes(16)
     enc_session_key = cipher_rsa.encrypt(session_key)
 
-    password['label'] = label
-    password['session_key'] = b64encode(enc_session_key).decode('ascii')
-    password['owner_id'] = owner_id
-    password['have_access_id'] = user_id
-    if parent_id:
-        password['parent_id'] = parent_id
+    password = {
+        'label': label,
+        'session_key': b64encode(enc_session_key).decode('ascii'),
+        'owner_id': owner_id,
+        'have_access_id': user_id,
+        'parent_id': parent_id,
+        'group_id': group_id,
+    }
 
-    if group_id:
-        password['group_id'] = group_id
-
-    for item in to_encrypt:
+    for key, value in to_encrypt.items():
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
-        ciphertext, tag = cipher_aes.encrypt_and_digest(
-            to_encrypt[item].encode('utf-8')
-        )
-        password[item + '_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
-        password[item] = b64encode(ciphertext).decode('ascii')
-        password[item + '_tag'] = b64encode(tag).decode('ascii')
+        ciphertext, tag = cipher_aes.encrypt_and_digest(value.encode('utf-8'))
+        password[f'{key}_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
+        password[key] = b64encode(ciphertext).decode('ascii')
+        password[f'{key}_tag'] = b64encode(tag).decode('ascii')
 
     return password
 
@@ -110,9 +96,12 @@ def create_password(
     db.session.commit()
 
 
-def update_password(user_id, password_id, label, to_encrypt, updated=None):
-    if not updated:
+def update_password(
+        user_id, password_id, label, to_encrypt, updated=None, commit=True
+):
+    if updated is None:
         updated = []
+
     if password_id not in updated:
         password = db.session.query(Password).get(password_id)
         updated_password = encrypt_password(
@@ -123,36 +112,27 @@ def update_password(user_id, password_id, label, to_encrypt, updated=None):
             password.parent_id,
             password.group_id,
         )
-        db.session.query(Password).filter(Password.id == password_id).update(
-            updated_password
-        )
-        db.session.commit()
+        for key, value in updated_password.items():
+            setattr(password, key, value)
 
-        updated.append(password.id)
+        updated.append(password_id)
 
-        children_passwords = db.session.query(Password).filter(
-            Password.parent_id == password.id
-        )
+        linked_passwords = list(password.children)
+        if password.parent:
+            linked_passwords.append(password.parent)
 
-        for child in children_passwords:
-            child_user_id = child.have_access_id
+        for linked_password in linked_passwords:
             update_password(
-                child_user_id, child.id, label, to_encrypt, updated
-            )
-
-        if password.parent_id:
-            parent_password = (
-                db.session.query(Password)
-                .filter(Password.id == password.parent_id)
-                .one()
-            )
-            update_password(
-                parent_password.have_access_id,
-                parent_password.id,
+                linked_password.have_access_id,
+                linked_password.id,
                 label,
                 to_encrypt,
                 updated,
+                commit=False,
             )
+
+    if commit:
+        db.session.commit()
 
 
 def decrypt_private_key(user, input_password):
@@ -160,7 +140,6 @@ def decrypt_private_key(user, input_password):
     nonce = b64decode(user.nonce)
     hash_object = SHA256.new(data=input_password.encode('utf-8'))
     cipher = ChaCha20.new(key=hash_object.digest(), nonce=nonce)
-
     return cipher.decrypt(encrypted_private_key)
 
 
@@ -169,61 +148,45 @@ def decrypt_password(password, private_key):
     cipher_rsa = PKCS1_OAEP.new(rsa_private_key)
     session_key = cipher_rsa.decrypt(b64decode(password.session_key))
 
-    items = {
-        'login': ['login_nonce', 'login_tag'],
-        'password': ['password_nonce', 'password_tag'],
-        'questions': ['questions_nonce', 'questions_tag'],
-    }
+    decrypted_password = {}
 
-    for item in items:
-        item_attr = items[item]
-        nonce = b64decode(getattr(password, item_attr[0]))
-        tag = b64decode(getattr(password, item_attr[1]))
+    for item in ('login', 'password', 'questions'):
+        nonce = b64decode(getattr(password, f'{item}_nonce'))
+        tag = b64decode(getattr(password, f'{item}_tag'))
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        items[item] = cipher_aes.decrypt_and_verify(
+        decrypted_password[item] = cipher_aes.decrypt_and_verify(
             b64decode(getattr(password, item)), tag
         ).decode('utf-8')
 
-    items['id'] = password.id
-    items['label'] = password.label
-
-    return items
+    decrypted_password['id'] = password.id
+    decrypted_password['label'] = password.label
+    return decrypted_password
 
 
 def decrypt_passwords(passwords, private_key):
-    passwords_decrypted = {}
-
-    for password in passwords:
-        passwords_decrypted[password.id] = decrypt_password(
-            password, private_key
-        )
-
-    return passwords_decrypted
+    return {
+        password.id: decrypt_password(password, private_key)
+        for password in passwords
+    }
 
 
-def is_known(password_id, passwords):
-    parents = []
-    found = False
-
-    for password in passwords:
-        if password_id == password.parent_id:
-            found = True
-            break
-        if password.parent_id:
-            parents.append(db.session.query(Password).get(password.parent_id))
-
-    if not found and parents:
-        is_known(password_id, parents)
-
-    return found
+def is_already_shared(password_id, passwords):
+    if password_id in [password.id for password in passwords]:
+        return True
+    return is_already_shared(
+        password_id,
+        [password.parent for password in passwords if password.parent]
+    )
 
 
 def share_to_user(
     password_id, share_user, current_user, private_key, group_id=None
 ):
-    password_is_known = is_known(password_id, share_user.passwords_accessible)
+    password_is_already_shared = is_already_shared(
+        password_id, share_user.passwords_accessible
+    )
 
-    if not password_is_known:
+    if not password_is_already_shared:
         password = db.session.query(Password).get(password_id)
         decrypted_password = decrypt_password(password, private_key)
 
@@ -241,45 +204,36 @@ def share_to_user(
         )
 
 
-def share_to_group(password_id, groups, current_user, private_key):
+def share_to_groups(password_id, groups, current_user, private_key):
     for group_id in groups:
-        users_in_group = db.session.query(UserGroup).filter(
-            UserGroup.group_id == group_id
-        )
-
-        if users_in_group.count() > 1:
-            for user in users_in_group:
-                if user.user_id != current_user.id:
-                    share_user = db.session.query(User).get(user.user_id)
-                    share_to_user(
-                        password_id,
-                        share_user,
-                        current_user,
-                        private_key,
-                        group_id,
-                    )
+        group = db.session.query(Group).get(group_id)
+        for user in group.users:
+            if user.user_id != current_user.id:
+                share_user = db.session.query(User).get(user.user_id)
+                share_to_user(
+                    password_id,
+                    share_user,
+                    current_user,
+                    private_key,
+                    group_id,
+                )
 
 
 def remove_group(group_id):
-    db.session.query(UserGroup).filter(UserGroup.group_id == group_id).delete()
-    db.session.query(GroupRequest).filter(
-        GroupRequest.group_id == group_id
-    ).delete()
-    db.session.query(Password).filter(Password.group_id == group_id).delete()
+    db.session.query(UserGroup).filter_by(group_id=group_id).delete()
+    db.session.query(GroupRequest).filter_by(group_id=group_id).delete()
+    db.session.query(Password).filter_by(group_id=group_id).delete()
     db.session.commit()
 
 
-def update_group(group_id, form):
+def update_group(group_id, label):
     current_group = db.session.query(Group).get(group_id)
-    current_group.label = form['label']
+    current_group.label = label
     db.session.commit()
 
 
-def create_group(owner_id, form):
-    group = Group(label=form['label'], owner_id=owner_id)
+def create_group(owner_id, label):
+    user = db.session.query(User).get(owner_id)
+    group = Group(label=label, owner_id=owner_id, users=[user])
     db.session.add(group)
-    db.session.flush()
-
-    usergroup = UserGroup(group_id=group.id, user_id=owner_id)
-    db.session.add(usergroup)
     db.session.commit()
