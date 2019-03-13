@@ -46,10 +46,6 @@ if app.debug:
         'werkzeug'
     ).handlers
     logging.getLogger('sqlalchemy.orm').setLevel(logging.WARNING)
-    logging.getLogger('unrest').setLevel(level)
-    logging.getLogger('unrest').handlers = logging.getLogger(
-        'werkzeug'
-    ).handlers
     if level == logging.WARNING:
         logging.getLogger('werkzeug').setLevel(level)
 
