@@ -1,7 +1,7 @@
 {% extends '_layout.html' %}
 {% block content %}
 
-<form action="{{ url_for('edit_group', group_id=group.id) }}" method="POST">
+<form method="POST">
   <label>Label*
     <input name="label" value="{{ group.label }}" required/>
   </label>
