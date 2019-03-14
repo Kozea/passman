@@ -171,7 +171,7 @@ def add_group():
             flash('Label is required', 'error')
             return redirect(url_for('add_group'))
 
-        create_group(session['user_id'], request.form)
+        create_group(session['user_id'], request.form['label'])
         return redirect(url_for('display_groups'))
 
     return render_template('add_group.html')
