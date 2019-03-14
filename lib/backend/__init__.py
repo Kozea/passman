@@ -3,13 +3,11 @@ import logging
 import os
 import sqlite3
 from pathlib import Path
-
 from urllib.parse import urlparse
 
 from flask import Flask
 
 from .model import db
-
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
