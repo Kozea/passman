@@ -144,6 +144,16 @@ def update_password(
         db.session.commit()
 
 
+def remove_password(password, commit=True):
+    """Delete a password and its children."""
+    print(password)
+    for child in password.children:
+        remove_password(child, commit=False)
+    db.session.delete(password)
+    if commit:
+        db.session.commit()
+
+
 def decrypt_private_key(user, input_password):
     """Decrypt the private key of an user with the password provided."""
     encrypted_private_key = b64decode(user.private_key)
