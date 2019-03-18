@@ -21,7 +21,6 @@ from ..utils import (
     remove_group,
     remove_password,
     share_to_groups,
-    share_to_user,
     update_group,
     update_password,
     update_user,
@@ -82,35 +81,6 @@ def share_password_groups(password_id, group_id=None):
 
     groups = db.session.query(User).get(session['user_id']).groups
     return render_template('share_password_groups.html', groups=groups)
-
-
-@app.route('/share_password/<int:password_id>', methods=['GET', 'POST'])
-def share_password(password_id):
-    if request.method == 'POST':
-        share_mail = request.form.get('mail')
-        share_user = user_exists(share_mail)
-
-        if not share_mail:
-            flash('Mail is required', 'error')
-            return redirect(url_for('share_password', password_id=password_id))
-        if '@' not in share_mail:
-            flash('Mail malformed', 'error')
-            return redirect(url_for('share_password', password_id=password_id))
-        if not share_user:
-            flash('Invalid mail', 'error')
-            return redirect(url_for('share_password', password_id=password_id))
-        if share_user.id == session['user_id']:
-            flash('Can’t share to yourself', 'error')
-            return redirect(url_for('share_password', password_id=password_id))
-
-        current_user = db.session.query(User).get(session['user_id'])
-        password = db.session.query(Password).get(password_id)
-        share_to_user(
-            password, share_user, current_user, session['private_key']
-        )
-        return redirect(url_for('display_passwords'))
-
-    return render_template('share_password.html')
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
