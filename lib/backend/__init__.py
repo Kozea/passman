@@ -16,20 +16,22 @@ app.config.from_envvar('FLASK_CONFIG')
 db.init_app(app)
 
 
-@app.cli.command()
 def drop_db():
     filename = urlparse(app.config['DB']).path
     if os.path.isfile(filename):
         os.remove(filename)
 
 
-@app.cli.command()
-def install_dev_data(app=app):
+def install_dev_data():
     filename = urlparse(app.config['DB']).path
     connection = sqlite3.connect(filename)
     sql_folder = Path(app.root_path) / 'sql'
     connection.executescript((sql_folder / 'test.sql').open().read())
     connection.commit()
+
+
+app.cli.command()(install_dev_data)
+app.cli.command()(drop_db)
 
 
 if app.debug:
