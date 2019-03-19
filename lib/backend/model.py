@@ -28,6 +28,8 @@ class Password(Base):
     group_id = Column(Integer, ForeignKey('group.id'), nullable=True)
 
     parent = relationship('Password', remote_side=[id], backref='children')
+    user = relationship('User', backref='passwords')
+    group = relationship('Group', backref='passwords')
 
 
 class UserGroup(Base):
@@ -62,11 +64,6 @@ class User(Base):
         'Group', secondary=GroupRequest.__table__, backref='pending_users'
     )
 
-    passwords_related = relationship(
-        'Password',
-        foreign_keys=[Password.related_user_id],
-        backref='related_user',
-    )
     groups_owned = relationship('Group', backref='owner')
 
 
@@ -76,9 +73,6 @@ class Group(Base):
     label = Column(String, nullable=False)
 
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    passwords_owned = relationship(
-        'Password', foreign_keys=[Password.group_id], backref='group_owner'
-    )
 
 
 class Db(object):
