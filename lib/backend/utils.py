@@ -88,8 +88,8 @@ def encrypt_password(
         'label': password_items.pop('label'),
         'session_key': b64encode(enc_session_key).decode('ascii'),
         'related_user_id': user.id,
-        'parent_id': parent_password.id if parent_password else None,
-        'group_id': group_owning.id if group_owning else None,
+        'parent': parent_password,
+        'group': group_owning,
     }
 
     for key, value in password_items.items():
@@ -123,8 +123,8 @@ def update_password(password, label, to_encrypt, updated=None, commit=True):
             password.user,
             to_encrypt,
             label,
-            password.parent_id,
-            password.group_id,
+            password.parent,
+            password.group,
         )
         for key, value in updated_password.items():
             setattr(password, key, value)
