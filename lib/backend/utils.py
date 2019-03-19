@@ -263,11 +263,9 @@ def remove_group(group):
 def update_group(group, label):
     """Update the name of a group to ``label``."""
     group.label = label
-    db.session.commit()
+    return group
 
 
 def create_group(owner, label):
     """Create a group named ``label`` owning by ``owner``."""
-    group = Group(label=label, owner_id=owner.id, users=[owner])
-    db.session.add(group)
-    db.session.commit()
+    return Group(label=label, owner_id=owner.id, users=[owner])

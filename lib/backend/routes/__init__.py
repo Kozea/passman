@@ -140,6 +140,7 @@ def edit_group(group_id):
             return redirect(url_for('edit_group', group_id=group_id))
 
         update_group(group, request.form['label'])
+        db.session.commit()
         return redirect(url_for('display_groups'))
 
     return render_template('edit_group.html', group=group)
@@ -160,10 +161,12 @@ def add_group():
             flash('Label is required', 'error')
             return redirect(url_for('add_group'))
 
-        create_group(
+        group = create_group(
             db.session.query(User).get(session['user_id']),
             request.form['label'],
         )
+        db.session.add(group)
+        db.session.commit()
         return redirect(url_for('display_groups'))
 
     return render_template('add_group.html')
