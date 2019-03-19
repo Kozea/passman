@@ -18,13 +18,12 @@ class Password(Base):
     password = Column(String, nullable=False)
     password_tag = Column(String, nullable=False)
     password_nonce = Column(String, nullable=False)
-    questions = Column(String, nullable=True)
-    questions_tag = Column(String, nullable=True)
-    questions_nonce = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+    notes_tag = Column(String, nullable=True)
+    notes_nonce = Column(String, nullable=True)
     session_key = Column(String, nullable=False)
 
-    owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    have_access_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    related_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
     group_id = Column(Integer, ForeignKey('group.id'), nullable=True)
 
@@ -59,17 +58,15 @@ class User(Base):
     groups = relationship(
         'Group', secondary=UserGroup.__table__, backref='users'
     )
-    request = relationship(
+    pending_requests = relationship(
         'Group', secondary=GroupRequest.__table__, backref='pending_users'
     )
 
-    passwords_owned = relationship(
-        'Password', foreign_keys=[Password.owner_id], backref='owner'
+    passwords_related = relationship(
+        'Password',
+        foreign_keys=[Password.related_user_id],
+        backref='related_user',
     )
-    passwords_accessible = relationship(
-        'Password', foreign_keys=[Password.have_access_id], backref='user'
-    )
-
     groups_owned = relationship('Group', backref='owner')
 
 
@@ -79,6 +76,9 @@ class Group(Base):
     label = Column(String, nullable=False)
 
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    passwords_owned = relationship(
+        'Password', foreign_keys=[Password.group_id], backref='group_owner'
+    )
 
 
 class Db(object):
