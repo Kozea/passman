@@ -146,7 +146,6 @@ def update_password(
 
 def remove_password(password, commit=True):
     """Delete a password and its children."""
-    print(password)
     for child in password.children:
         remove_password(child, commit=False)
     db.session.delete(password)
