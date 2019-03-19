@@ -111,7 +111,7 @@ def add_password():
 @app.route('/display_passwords')
 def display_passwords():
     passwords = (
-        db.session.query(User).get(session['user_id']).passwords_related
+        db.session.query(User).get(session['user_id']).passwords
     )
     return render_template(
         'display_passwords.html',
