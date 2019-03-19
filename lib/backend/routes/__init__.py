@@ -54,9 +54,8 @@ def edit_password(password_id):
             flash('Label, login and password are all required', 'error')
             return redirect(url_for('edit_password', password_id=password_id))
 
-        user = db.session.query(User).get(session['user_id'])
         password = db.session.query(Password).get(password_id)
-        update_password(user, password, label, to_encrypt)
+        update_password(password, label, to_encrypt)
         return redirect(url_for('display_passwords'))
 
     encrypted_password = db.session.query(Password).get(password_id)
@@ -86,19 +85,24 @@ def share_password_groups(password_id, group_id=None):
 @app.route('/add_password', methods=['GET', 'POST'])
 def add_password():
     if request.method == 'POST':
-        to_encrypt = {
+        password_items = {
+            'label': request.form.get('label'),
             'login': request.form.get('login'),
             'password': request.form.get('password'),
-            'questions': request.form.get('questions'),
+            'notes': request.form.get('notes'),
         }
-        label = request.form.get('label')
 
-        if not to_encrypt['login'] or not to_encrypt['password'] or not label:
+        if not (
+            password_items['login']
+            or not password_items['password']
+            or not password_items['label']
+        ):
             flash('Label, login and password are all required', 'error')
             return redirect(url_for('add_password'))
 
         user = db.session.query(User).get(session['user_id'])
-        create_password(user, session['user_id'], to_encrypt, label)
+        db.session.add(Password(**create_password(user, password_items)))
+        db.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('add_password.html')
@@ -107,7 +111,7 @@ def add_password():
 @app.route('/display_passwords')
 def display_passwords():
     passwords = (
-        db.session.query(User).get(session['user_id']).passwords_accessible
+        db.session.query(User).get(session['user_id']).passwords_related
     )
     return render_template(
         'display_passwords.html',
@@ -203,11 +207,12 @@ def add_user():
         if '@' not in input_mail:
             flash('Mail malformed', 'error')
             return redirect(url_for('add_user'))
-        if user_exists(input_mail):
+        if user_exists(input_mail, db.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('add_user'))
 
-        create_user(input_mail, input_password)
+        db.session.add(User(**create_user(input_mail, input_password)))
+        db.session.commit()
         return redirect(url_for('connect'))
 
     return render_template('add_user.html')
@@ -223,7 +228,7 @@ def logout():
 def connect():
     if request.method == 'POST':
         input_password = request.form['password']
-        user = user_exists(request.form.get('login'))
+        user = user_exists(request.form.get('login'), db.session.query(User))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
             flash('Login or password incorrect', 'error')

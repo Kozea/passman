@@ -9,11 +9,20 @@ from passlib.hash import pbkdf2_sha256
 from .model import Group, GroupRequest, Password, User, UserGroup, db
 
 
-def user_exists(login):
-    """Check if an user with a certain ``login`` exists."""
-    for user in db.session.query(User):
+def user_exists(login, users):
+    """Check if an user with a certain ``login`` exists in a list of users."""
+    for user in users:
         if pbkdf2_sha256.verify(login, user.login):
             return user
+
+
+def decrypt_private_key(user, input_password):
+    """Decrypt the private key of an user with the password provided."""
+    encrypted_private_key = b64decode(user.private_key)
+    nonce = b64decode(user.nonce)
+    hash_object = SHA256.new(data=input_password.encode('utf-8'))
+    cipher = ChaCha20.new(key=hash_object.digest(), nonce=nonce)
+    return cipher.decrypt(encrypted_private_key)
 
 
 def encrypt_private_key(password, private_key):
@@ -24,6 +33,25 @@ def encrypt_private_key(password, private_key):
     return ciphertext, cipher.nonce
 
 
+def create_user(login, password):
+    """Create an user and generate his RSA keys."""
+    key = RSA.generate(2048)
+    public_key = key.publickey().export_key()
+    private_key = key.export_key()
+    encrypted_private_key, nonce = encrypt_private_key(password, private_key)
+
+    user = {
+        'login': pbkdf2_sha256.hash(login),
+        'password': pbkdf2_sha256.hash(password),
+        'public_key': b64encode(public_key).decode('ascii'),
+        'private_key': b64encode(encrypted_private_key).decode('ascii'),
+        'nonce': b64encode(nonce).decode('ascii'),
+    }
+
+    return user
+
+
+# TODO
 def update_user(user, mail, password, private_key=None):
     """
     Update an user.
@@ -44,27 +72,8 @@ def update_user(user, mail, password, private_key=None):
     db.session.commit()
 
 
-def create_user(login, password):
-    """Create an user and generate his RSA keys."""
-    key = RSA.generate(2048)
-    public_key = key.publickey().export_key()
-    private_key = key.export_key()
-    encrypted_private_key, nonce = encrypt_private_key(password, private_key)
-
-    user = {
-        'login': pbkdf2_sha256.hash(login),
-        'password': pbkdf2_sha256.hash(password),
-        'public_key': b64encode(public_key).decode('ascii'),
-        'private_key': b64encode(encrypted_private_key).decode('ascii'),
-        'nonce': b64encode(nonce).decode('ascii'),
-    }
-
-    db.session.add(User(**user))
-    db.session.commit()
-
-
 def encrypt_password(
-    user, owner_id, to_encrypt, label, parent_id=None, group_id=None
+    user, password_items, parent_password=None, group_owning=None
 ):
     """
     Build a dict representing a password
@@ -76,15 +85,14 @@ def encrypt_password(
     enc_session_key = cipher_rsa.encrypt(session_key)
 
     password = {
-        'label': label,
+        'label': password_items.pop('label'),
         'session_key': b64encode(enc_session_key).decode('ascii'),
-        'owner_id': owner_id,
-        'have_access_id': user.id,
-        'parent_id': parent_id,
-        'group_id': group_id,
+        'related_user_id': user.id,
+        'parent_id': parent_password.id if parent_password else None,
+        'group_id': group_owning.id if group_owning else None,
     }
 
-    for key, value in to_encrypt.items():
+    for key, value in password_items.items():
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
         ciphertext, tag = cipher_aes.encrypt_and_digest(value.encode('utf-8'))
         password[f'{key}_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
@@ -95,27 +103,24 @@ def encrypt_password(
 
 
 def create_password(
-    user, owner_id, to_encrypt, label, parent_id=None, group_id=None
+    user, password_items, parent_password=None, group_owning=None
 ):
     """Create a password."""
     password = encrypt_password(
-        user, owner_id, to_encrypt, label, parent_id, group_id
+        user, password_items, parent_password, group_owning
     )
-    db.session.add(Password(**password))
-    db.session.commit()
+    return password
 
 
-def update_password(
-    user, password, label, to_encrypt, updated=None, commit=True
-):
+# TODO
+def update_password(password, label, to_encrypt, updated=None, commit=True):
     """Update a password."""
     if updated is None:
         updated = []
 
     if password.id not in updated:
         updated_password = encrypt_password(
-            user,
-            password.owner_id,
+            password.user,
             to_encrypt,
             label,
             password.parent_id,
@@ -132,18 +137,14 @@ def update_password(
 
         for linked_password in linked_passwords:
             update_password(
-                db.session.query(User).get(linked_password.have_access_id),
-                linked_password,
-                label,
-                to_encrypt,
-                updated,
-                commit=False,
+                linked_password, label, to_encrypt, updated, commit=False
             )
 
     if commit:
         db.session.commit()
 
 
+# TODO
 def remove_password(password, commit=True):
     """Delete a password and its children."""
     for child in password.children:
@@ -153,15 +154,7 @@ def remove_password(password, commit=True):
         db.session.commit()
 
 
-def decrypt_private_key(user, input_password):
-    """Decrypt the private key of an user with the password provided."""
-    encrypted_private_key = b64decode(user.private_key)
-    nonce = b64decode(user.nonce)
-    hash_object = SHA256.new(data=input_password.encode('utf-8'))
-    cipher = ChaCha20.new(key=hash_object.digest(), nonce=nonce)
-    return cipher.decrypt(encrypted_private_key)
-
-
+# TODO
 def decrypt_password(password, private_key):
     """Decrypt a password."""
     rsa_private_key = RSA.import_key(private_key)
@@ -170,7 +163,7 @@ def decrypt_password(password, private_key):
 
     decrypted_password = {}
 
-    for item in ('login', 'password', 'questions'):
+    for item in ('login', 'password', 'notes'):
         nonce = b64decode(getattr(password, f'{item}_nonce'))
         tag = b64decode(getattr(password, f'{item}_tag'))
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
@@ -183,6 +176,7 @@ def decrypt_password(password, private_key):
     return decrypted_password
 
 
+# TODO
 def decrypt_passwords(passwords, private_key):
     """Decrypt a list of passwords."""
     return {
@@ -191,6 +185,7 @@ def decrypt_passwords(passwords, private_key):
     }
 
 
+# TODO
 def is_already_shared(password, passwords):
     """
     Check recursively if a password is in a list of passwords,
@@ -206,6 +201,7 @@ def is_already_shared(password, passwords):
     )
 
 
+# TODO
 def share_to_user(
     password, share_user, current_user, private_key, group_id=None
 ):
@@ -234,6 +230,7 @@ def share_to_user(
         )
 
 
+# TODO
 def share_to_group(password, group, current_user, private_key):
     """Share a password to the members of a group."""
     for user in group.users:
@@ -244,12 +241,14 @@ def share_to_group(password, group, current_user, private_key):
             )
 
 
+# TODO
 def share_to_groups(password, groups, current_user, private_key):
     """Share a password to a list of groups."""
     for group in groups:
         share_to_group(password, group, current_user, private_key)
 
 
+# TODO
 def remove_group(group):
     """Delete a group."""
     db.session.query(UserGroup).filter_by(group_id=group.id).delete()
