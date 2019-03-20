@@ -74,7 +74,7 @@ def share_password_group(password_id):
                 password, group, current_user, session['private_key']
             )
             for password in passwords_to_add:
-                db.session.add(Password(**password))
+                db.session.add(password)
             db.session.commit()
         return redirect(url_for('display_passwords'))
 
@@ -101,7 +101,7 @@ def add_password():
             return redirect(url_for('add_password'))
 
         user = db.session.query(User).get(session['user_id'])
-        db.session.add(Password(**create_password(user, password_items)))
+        db.session.add(create_password(user, password_items))
         db.session.commit()
         return redirect(url_for('display_passwords'))
 

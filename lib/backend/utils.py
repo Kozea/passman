@@ -67,7 +67,7 @@ def create_password(
         'session_key': b64encode(enc_session_key).decode('ascii'),
         'related_user_id': user.id,
         'parent': parent_password,
-        'group': group_owning,
+        'groups': [group_owning] if group_owning else [],
     }
 
     for key, value in password_items.items():
@@ -76,7 +76,7 @@ def create_password(
         password[f'{key}_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
         password[key] = b64encode(ciphertext).decode('ascii')
         password[f'{key}_tag'] = b64encode(tag).decode('ascii')
-    return password
+    return Password(**password)
 
 
 def decrypt_password(password, private_key):
@@ -110,7 +110,7 @@ def share_to_group(password, group, current_user, private_key):
     decrypted_password = decrypt_password(password, private_key)
     # Pop id as it's not needed for creation
     decrypted_password.pop('id')
-    decrypted_password.pop('group_id')
+    decrypted_password.pop('groups')
 
     for user in group.users:
         if user.id != current_user.id:
@@ -118,7 +118,7 @@ def share_to_group(password, group, current_user, private_key):
                 create_password(user, decrypted_password, password, group)
             )
         else:
-            password.group = group
+            password.groups.append(group)
     return passwords_to_add
 
 
