@@ -130,7 +130,7 @@ def update_group(group, label):
 
 def create_group(owner, label):
     """Create a group named ``label`` owning by ``owner``."""
-    return Group(label=label, owner_id=owner.id, users=[owner])
+    return Group(label=label, users=[owner])
 
 
 # TODO
