@@ -47,13 +47,16 @@ class UserGroup(Base):
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
 
-class GroupRequest(Base):
-    __tablename__ = 'grouprequest'
+class Request(Base):
+    __tablename__ = 'request'
     id = Column(Integer, primary_key=True, autoincrement=True)
     group_id = Column(Integer, ForeignKey('group.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     token = Column(String, nullable=False)
     timestamp = Column(Integer, nullable=False)
+
+    user = relationship('User', backref='requests')
+    group = relationship('Group', backref='requests')
 
 
 class User(Base):
@@ -68,10 +71,6 @@ class User(Base):
     groups = relationship(
         'Group', secondary=UserGroup.__table__, backref='users'
     )
-    pending_requests = relationship(
-        'Group', secondary=GroupRequest.__table__, backref='pending_users'
-    )
-
     groups_owned = relationship('Group', backref='owner')
 
 
