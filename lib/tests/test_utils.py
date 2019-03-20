@@ -6,11 +6,13 @@ from .conftest import PRIVATE_KEY
 
 
 def test_user_exists(db_session):
-    assert utils.user_exists('test@example.com')
+    users = db_session.query(User)
+    assert utils.user_exists('test@example.com', users)
 
 
 def test_not_user_exists(db_session):
-    assert not utils.user_exists('toto@example.com')
+    users = db_session.query(User)
+    assert not utils.user_exists('toto@example.com', users)
 
 
 def test_decrypt_private_key(db_session):
@@ -26,7 +28,7 @@ def test_decrypt_password(db_session):
     assert utils.decrypt_password(password, b64decode(PRIVATE_KEY)) == {
         'login': 'login',
         'password': 'password',
-        'questions': 'questions',
+        'notes': 'questions',
         'id': 1,
         'label': 'one super password',
     }
