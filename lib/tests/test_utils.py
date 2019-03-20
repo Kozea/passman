@@ -30,7 +30,7 @@ def test_decrypt_password(db_session):
         'password': 'password',
         'notes': 'questions',
         'id': 1,
-        'group_id': None,
+        'groups': [],
         'label': 'one super password',
     }
 
@@ -39,7 +39,6 @@ def test_create_group(db_session):
     user = db_session.query(User).get(1)
     group = utils.create_group(user, 'label')
     assert group.label == 'label'
-    assert group.owner_id == 1
     assert group.users == [user]
 
 
