@@ -8,6 +8,13 @@ from sqlalchemy.types import Integer, String
 Base = declarative_base()
 
 
+class PasswordGroup(Base):
+    __tablename__ = 'passwordgroup'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    group_id = Column(Integer, ForeignKey('group.id'), nullable=False)
+    password_id = Column(Integer, ForeignKey('password.id'), nullable=False)
+
+
 class Password(Base):
     __tablename__ = 'password'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -25,11 +32,12 @@ class Password(Base):
 
     related_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
-    group_id = Column(Integer, ForeignKey('group.id'), nullable=True)
 
     parent = relationship('Password', remote_side=[id], backref='children')
     user = relationship('User', backref='passwords')
-    group = relationship('Group', backref='passwords')
+    groups = relationship(
+        'Group', secondary=PasswordGroup.__table__, backref='passwords'
+    )
 
 
 class UserGroup(Base):
