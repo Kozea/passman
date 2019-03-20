@@ -71,15 +71,12 @@ class User(Base):
     groups = relationship(
         'Group', secondary=UserGroup.__table__, backref='users'
     )
-    groups_owned = relationship('Group', backref='owner')
 
 
 class Group(Base):
     __tablename__ = 'group'
     id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String, nullable=False)
-
-    owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
 
 class Db(object):
