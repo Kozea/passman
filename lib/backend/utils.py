@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, GroupRequest, Password, UserGroup, db
+from .model import Group, Password, UserGroup, db
 
 
 def user_exists(login, users):
@@ -96,7 +96,7 @@ def decrypt_password(password, private_key):
         ).decode('utf-8')
 
     decrypted_password['id'] = password.id
-    decrypted_password['group_id'] = password.group_id
+    decrypted_password['groups'] = password.groups
     decrypted_password['label'] = password.label
     return decrypted_password
 
@@ -184,7 +184,6 @@ def decrypt_passwords(passwords, private_key):
 def remove_group(group):
     """Delete a group."""
     db.session.query(UserGroup).filter_by(group_id=group.id).delete()
-    db.session.query(GroupRequest).filter_by(group_id=group.id).delete()
     db.session.query(Password).filter_by(group_id=group.id).delete()
     db.session.delete(group)
     db.session.commit()
