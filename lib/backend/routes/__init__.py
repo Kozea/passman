@@ -20,7 +20,7 @@ from ..utils import (
     decrypt_private_key,
     remove_group,
     remove_password,
-    share_to_groups,
+    share_to_group,
     update_group,
     update_password,
     update_user,
@@ -63,23 +63,23 @@ def edit_password(password_id):
     return render_template('edit_password.html', password=password)
 
 
-@app.route('/share_password_groups/<int:password_id>', methods=['GET', 'POST'])
-def share_password_groups(password_id, group_id=None):
+@app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
+def share_password_group(password_id):
     if request.method == 'POST':
         if request.form:
             current_user = db.session.query(User).get(session['user_id'])
             password = db.session.query(Password).get(password_id)
-            groups = [
-                db.session.query(Group).get(group_id)
-                for group_id in request.form
-            ]
-            share_to_groups(
-                password, groups, current_user, session['private_key']
+            group = db.session.query(Group).get(request.form.get('group'))
+            passwords_to_add = share_to_group(
+                password, group, current_user, session['private_key']
             )
+            for password in passwords_to_add:
+                db.session.add(Password(**password))
+            db.session.commit()
         return redirect(url_for('display_passwords'))
 
     groups = db.session.query(User).get(session['user_id']).groups
-    return render_template('share_password_groups.html', groups=groups)
+    return render_template('share_password_group.html', groups=groups)
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
@@ -110,9 +110,7 @@ def add_password():
 
 @app.route('/display_passwords')
 def display_passwords():
-    passwords = (
-        db.session.query(User).get(session['user_id']).passwords
-    )
+    passwords = db.session.query(User).get(session['user_id']).passwords
     return render_template(
         'display_passwords.html',
         passwords=decrypt_passwords(passwords, session['private_key']),

@@ -30,6 +30,7 @@ def test_decrypt_password(db_session):
         'password': 'password',
         'notes': 'questions',
         'id': 1,
+        'group_id': None,
         'label': 'one super password',
     }
 
