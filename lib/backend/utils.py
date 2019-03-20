@@ -72,12 +72,12 @@ def update_user(user, mail, password, private_key=None):
     db.session.commit()
 
 
-def encrypt_password(
+def create_password(
     user, password_items, parent_password=None, group_owning=None
 ):
     """
-    Build a dict representing a password
-    and encrypt items contained in ``to_encrypt``.
+    Create a password.
+    ``password_items`` are encrypted, except for the label.
     """
     public_key = RSA.import_key(b64decode(user.public_key))
     cipher_rsa = PKCS1_OAEP.new(public_key)
@@ -102,16 +102,6 @@ def encrypt_password(
     return password
 
 
-def create_password(
-    user, password_items, parent_password=None, group_owning=None
-):
-    """Create a password."""
-    password = encrypt_password(
-        user, password_items, parent_password, group_owning
-    )
-    return password
-
-
 # TODO
 def update_password(password, label, to_encrypt, updated=None, commit=True):
     """Update a password."""
@@ -119,12 +109,8 @@ def update_password(password, label, to_encrypt, updated=None, commit=True):
         updated = []
 
     if password.id not in updated:
-        updated_password = encrypt_password(
-            password.user,
-            to_encrypt,
-            label,
-            password.parent,
-            password.group,
+        updated_password = create_password(
+            password.user, to_encrypt, label, password.parent, password.group
         )
         for key, value in updated_password.items():
             setattr(password, key, value)
