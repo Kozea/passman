@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, GroupRequest, Password, User, UserGroup, db
+from .model import Group, GroupRequest, Password, UserGroup, db
 
 
 def user_exists(login, users):
@@ -47,37 +47,15 @@ def create_user(login, password):
         'private_key': b64encode(encrypted_private_key).decode('ascii'),
         'nonce': b64encode(nonce).decode('ascii'),
     }
-
     return user
 
 
-# TODO
-def update_user(user, mail, password, private_key=None):
-    """
-    Update an user.
-    If his password is changed, all his passwords are re-encrypted.
-    """
-    if mail:
-        user.login = pbkdf2_sha256.hash(mail)
-    if password:
-        user.password = pbkdf2_sha256.hash(password)
-
-        encrypted_private_key, nonce = encrypt_private_key(
-            password, private_key
-        )
-
-        user.private_key = b64encode(encrypted_private_key).decode('ascii')
-        user.nonce = b64encode(nonce).decode('ascii')
-
-    db.session.commit()
-
-
-def encrypt_password(
+def create_password(
     user, password_items, parent_password=None, group_owning=None
 ):
     """
-    Build a dict representing a password
-    and encrypt items contained in ``to_encrypt``.
+    Create a password.
+    ``password_items`` are encrypted, except for the label.
     """
     public_key = RSA.import_key(b64decode(user.public_key))
     cipher_rsa = PKCS1_OAEP.new(public_key)
@@ -98,18 +76,61 @@ def encrypt_password(
         password[f'{key}_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
         password[key] = b64encode(ciphertext).decode('ascii')
         password[f'{key}_tag'] = b64encode(tag).decode('ascii')
-
     return password
 
 
-def create_password(
-    user, password_items, parent_password=None, group_owning=None
-):
-    """Create a password."""
-    password = encrypt_password(
-        user, password_items, parent_password, group_owning
-    )
-    return password
+def decrypt_password(password, private_key):
+    """Decrypt a password with ``private_key``."""
+    rsa_private_key = RSA.import_key(private_key)
+    cipher_rsa = PKCS1_OAEP.new(rsa_private_key)
+    session_key = cipher_rsa.decrypt(b64decode(password.session_key))
+
+    decrypted_password = {}
+
+    for item in ('login', 'password', 'notes'):
+        nonce = b64decode(getattr(password, f'{item}_nonce'))
+        tag = b64decode(getattr(password, f'{item}_tag'))
+        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+        decrypted_password[item] = cipher_aes.decrypt_and_verify(
+            b64decode(getattr(password, item)), tag
+        ).decode('utf-8')
+
+    decrypted_password['id'] = password.id
+    decrypted_password['group_id'] = password.group_id
+    decrypted_password['label'] = password.label
+    return decrypted_password
+
+
+def share_to_group(password, group, current_user, private_key):
+    """
+    Share a password to the members of a group
+    and link the original password to the group.
+    """
+    passwords_to_add = []
+    decrypted_password = decrypt_password(password, private_key)
+    # Pop id as it's not needed for creation
+    decrypted_password.pop('id')
+    decrypted_password.pop('group_id')
+
+    for user in group.users:
+        if user.id != current_user.id:
+            passwords_to_add.append(
+                create_password(user, decrypted_password, password, group)
+            )
+        else:
+            password.group = group
+    return passwords_to_add
+
+
+def update_group(group, label):
+    """Update the name of a group to ``label``."""
+    group.label = label
+    return group
+
+
+def create_group(owner, label):
+    """Create a group named ``label`` owning by ``owner``."""
+    return Group(label=label, owner_id=owner.id, users=[owner])
 
 
 # TODO
@@ -119,12 +140,8 @@ def update_password(password, label, to_encrypt, updated=None, commit=True):
         updated = []
 
     if password.id not in updated:
-        updated_password = encrypt_password(
-            password.user,
-            to_encrypt,
-            label,
-            password.parent,
-            password.group,
+        updated_password = create_password(
+            password.user, to_encrypt, label, password.parent, password.group
         )
         for key, value in updated_password.items():
             setattr(password, key, value)
@@ -155,97 +172,12 @@ def remove_password(password, commit=True):
 
 
 # TODO
-def decrypt_password(password, private_key):
-    """Decrypt a password."""
-    rsa_private_key = RSA.import_key(private_key)
-    cipher_rsa = PKCS1_OAEP.new(rsa_private_key)
-    session_key = cipher_rsa.decrypt(b64decode(password.session_key))
-
-    decrypted_password = {}
-
-    for item in ('login', 'password', 'notes'):
-        nonce = b64decode(getattr(password, f'{item}_nonce'))
-        tag = b64decode(getattr(password, f'{item}_tag'))
-        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        decrypted_password[item] = cipher_aes.decrypt_and_verify(
-            b64decode(getattr(password, item)), tag
-        ).decode('utf-8')
-
-    decrypted_password['id'] = password.id
-    decrypted_password['label'] = password.label
-    return decrypted_password
-
-
-# TODO
 def decrypt_passwords(passwords, private_key):
     """Decrypt a list of passwords."""
     return {
         password.id: decrypt_password(password, private_key)
         for password in passwords
     }
-
-
-# TODO
-def is_already_shared(password, passwords):
-    """
-    Check recursively if a password is in a list of passwords,
-    or in their parents.
-    """
-    if not passwords:
-        return False
-    if password in passwords:
-        return True
-    return is_already_shared(
-        password,
-        [password.parent for password in passwords if password.parent],
-    )
-
-
-# TODO
-def share_to_user(
-    password, share_user, current_user, private_key, group_id=None
-):
-    """
-    Share a password ``password`` owning by ``current_user``
-    to an user ``share_user``.
-    """
-    password_is_already_shared = is_already_shared(
-        password, share_user.passwords_accessible
-    )
-
-    if not password_is_already_shared:
-        decrypted_password = decrypt_password(password, private_key)
-
-        # Pop items which shouldn't be encrypted
-        decrypted_password.pop('id')
-        decrypted_password.pop('label')
-
-        create_password(
-            share_user,
-            current_user.id,
-            decrypted_password,
-            password.label,
-            password.id,
-            group_id,
-        )
-
-
-# TODO
-def share_to_group(password, group, current_user, private_key):
-    """Share a password to the members of a group."""
-    for user in group.users:
-        if user.id != current_user.id:
-            share_user = db.session.query(User).get(user.id)
-            share_to_user(
-                password, share_user, current_user, private_key, group.id
-            )
-
-
-# TODO
-def share_to_groups(password, groups, current_user, private_key):
-    """Share a password to a list of groups."""
-    for group in groups:
-        share_to_group(password, group, current_user, private_key)
 
 
 # TODO
@@ -258,12 +190,22 @@ def remove_group(group):
     db.session.commit()
 
 
-def update_group(group, label):
-    """Update the name of a group to ``label``."""
-    group.label = label
-    return group
+# TODO
+def update_user(user, mail, password, private_key=None):
+    """
+    Update an user.
+    If his password is changed, all his passwords are re-encrypted.
+    """
+    if mail:
+        user.login = pbkdf2_sha256.hash(mail)
+    if password:
+        user.password = pbkdf2_sha256.hash(password)
 
+        encrypted_private_key, nonce = encrypt_private_key(
+            password, private_key
+        )
 
-def create_group(owner, label):
-    """Create a group named ``label`` owning by ``owner``."""
-    return Group(label=label, owner_id=owner.id, users=[owner])
+        user.private_key = b64encode(encrypted_private_key).decode('ascii')
+        user.nonce = b64encode(nonce).decode('ascii')
+
+    db.session.commit()
