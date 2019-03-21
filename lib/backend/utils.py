@@ -110,10 +110,11 @@ def password_already_shared(password_to_find, passwords):
     if not passwords:
         return False
     for password in passwords:
-        if password.parent == password_to_find:
+        if password.parent and password.parent == password_to_find:
             return password
     password_already_shared(
-        password_to_find, [password.parent for password in passwords]
+        password_to_find,
+        [password.parent for password in passwords if password.parent],
     )
 
 
