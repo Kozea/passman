@@ -193,15 +193,6 @@ def remove_password(password, commit=True):
 
 
 # TODO
-def decrypt_passwords(passwords, private_key):
-    """Decrypt a list of passwords."""
-    return {
-        password.id: decrypt_password(password, private_key)
-        for password in passwords
-    }
-
-
-# TODO
 def remove_group(group):
     """Delete a group."""
     db.session.query(UserGroup).filter_by(group_id=group.id).delete()

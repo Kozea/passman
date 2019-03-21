@@ -16,7 +16,6 @@ from ..utils import (
     create_password,
     create_user,
     decrypt_password,
-    decrypt_passwords,
     decrypt_private_key,
     remove_group,
     remove_password,
@@ -111,9 +110,12 @@ def add_password():
 @app.route('/display_passwords')
 def display_passwords():
     passwords = db.session.query(User).get(session['user_id']).passwords
+    decrypted_passwords = {
+        password.id: decrypt_password(password, session['private_key'])
+        for password in passwords
+    }
     return render_template(
-        'display_passwords.html',
-        passwords=decrypt_passwords(passwords, session['private_key']),
+        'display_passwords.html', passwords=decrypted_passwords
     )
 
 
