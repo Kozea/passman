@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, Password, UserGroup, db
+from .model import Group, db
 
 
 def user_exists(login, users):
@@ -48,6 +48,24 @@ def create_user(login, password):
         'nonce': b64encode(nonce).decode('ascii'),
     }
     return user
+
+
+def update_user(user, mail, password, private_key=None):
+    """
+    Update an user.
+    If his password is changed, his private key is re-encrypted.
+    """
+    if mail:
+        user.login = pbkdf2_sha256.hash(mail)
+    if password:
+        user.password = pbkdf2_sha256.hash(password)
+
+        encrypted_private_key, nonce = encrypt_private_key(
+            password, private_key
+        )
+
+        user.private_key = b64encode(encrypted_private_key).decode('ascii')
+        user.nonce = b64encode(nonce).decode('ascii')
 
 
 def create_password(user, password_items, parent_password=None, groups=None):
@@ -181,30 +199,17 @@ def create_group(user, label):
 
 
 # TODO
-def remove_group(group):
-    """Delete a group."""
-    db.session.query(UserGroup).filter_by(group_id=group.id).delete()
-    db.session.query(Password).filter_by(group_id=group.id).delete()
-    db.session.delete(group)
-    db.session.commit()
+def remove_password(password):
+    pass
 
 
 # TODO
-def update_user(user, mail, password, private_key=None):
-    """
-    Update an user.
-    If his password is changed, all his passwords are re-encrypted.
-    """
-    if mail:
-        user.login = pbkdf2_sha256.hash(mail)
-    if password:
-        user.password = pbkdf2_sha256.hash(password)
+def remove_user(user):
+    pass
 
-        encrypted_private_key, nonce = encrypt_private_key(
-            password, private_key
-        )
 
-        user.private_key = b64encode(encrypted_private_key).decode('ascii')
-        user.nonce = b64encode(nonce).decode('ascii')
-
+# TODO
+def remove_group(group):
+    """Delete a group."""
+    db.session.delete(group)
     db.session.commit()

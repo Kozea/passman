@@ -190,7 +190,7 @@ def add_group():
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
     if request.method == 'POST':
-        if user_exists(request.form['mail']):
+        if user_exists(request.form['mail'], db.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('edit_user'))
 
@@ -201,7 +201,8 @@ def edit_user():
             update_user(user, mail, password, session['private_key'])
         else:
             update_user(user, mail, password)
-        return redirect(url_for('display_passwords'))
+        db.session.commit()
+        return redirect(url_for('logout'))
 
     return render_template('edit_user.html')
 
