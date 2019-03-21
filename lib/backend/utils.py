@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, Password, User, UserGroup, db
+from .model import Group, Password, UserGroup, db
 
 
 def user_exists(login, users):
@@ -47,7 +47,7 @@ def create_user(login, password):
         'private_key': b64encode(encrypted_private_key).decode('ascii'),
         'nonce': b64encode(nonce).decode('ascii'),
     }
-    return User(**user)
+    return user
 
 
 def create_password(
@@ -76,7 +76,7 @@ def create_password(
         password[f'{key}_nonce'] = b64encode(cipher_aes.nonce).decode('ascii')
         password[key] = b64encode(ciphertext).decode('ascii')
         password[f'{key}_tag'] = b64encode(tag).decode('ascii')
-    return Password(**password)
+    return password
 
 
 def decrypt_password(password, private_key):

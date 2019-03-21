@@ -103,7 +103,7 @@ def add_password():
             return redirect(url_for('add_password'))
 
         user = db.session.query(User).get(session['user_id'])
-        db.session.add(create_password(user, password_items))
+        db.session.add(Password(**create_password(user, password_items)))
         db.session.commit()
         return redirect(url_for('display_passwords'))
 
@@ -214,7 +214,7 @@ def add_user():
             flash('Mail already used', 'error')
             return redirect(url_for('add_user'))
 
-        db.session.add(create_user(input_mail, input_password))
+        db.session.add(User(**create_user(input_mail, input_password)))
         db.session.commit()
         return redirect(url_for('connect'))
 
