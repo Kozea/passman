@@ -149,9 +149,9 @@ def update_group(group, label):
     return group
 
 
-def create_group(owner, label):
-    """Create a group named ``label`` owning by ``owner``."""
-    return Group(label=label, users=[owner])
+def create_group(user, label):
+    """Create a group named ``label`` and put user as a member  ``user``."""
+    return Group(label=label, users=[user])
 
 
 # TODO
