@@ -124,7 +124,7 @@ def share_to_group(password, group, current_user, private_key):
     """
     passwords_to_add = []
     decrypted_password = decrypt_password(password, private_key)
-    # Pop id as it's not needed for creation
+    # Pop id and groups as they're not needed for creation
     decrypted_password.pop('id')
     decrypted_password.pop('groups')
 
