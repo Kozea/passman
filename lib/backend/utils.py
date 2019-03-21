@@ -101,6 +101,22 @@ def decrypt_password(password, private_key):
     return decrypted_password
 
 
+def password_already_shared(password_to_find, passwords):
+    """
+    Check if a password was already shared by looking
+    the password parent in a list of passwords.
+    If the password is the parent of an other password, its child is return.
+    """
+    if not passwords:
+        return False
+    for password in passwords:
+        if password.parent == password_to_find:
+            return password
+    password_already_shared(
+        password_to_find, [password.parent for password in passwords]
+    )
+
+
 def share_to_group(password, group, current_user, private_key):
     """
     Share a password to the members of a group
@@ -114,9 +130,14 @@ def share_to_group(password, group, current_user, private_key):
 
     for user in group.users:
         if user.id != current_user.id:
-            passwords_to_add.append(
-                create_password(user, decrypted_password, password, group)
-            )
+            password_known = password_already_shared(password, user.passwords)
+            if password_known:
+                if group not in password_known.groups:
+                    password_known.groups.append(group)
+            else:
+                passwords_to_add.append(
+                    create_password(user, decrypted_password, password, group)
+                )
         else:
             password.groups.append(group)
     return passwords_to_add
