@@ -45,19 +45,27 @@ def delete_password(password_id):
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
 def edit_password(password_id):
     if request.method == 'POST':
-        to_encrypt = {
+        password_items = {
+            'label': request.form.get('label'),
             'login': request.form.get('login'),
             'password': request.form.get('password'),
-            'questions': request.form.get('questions'),
+            'notes': request.form.get('notes'),
         }
-        label = request.form.get('label')
 
-        if not to_encrypt['login'] or not to_encrypt['password'] or not label:
+        if not (
+            password_items['login']
+            or not password_items['password']
+            or not password_items['label']
+        ):
             flash('Label, login and password are all required', 'error')
             return redirect(url_for('edit_password', password_id=password_id))
 
         password = db.session.query(Password).get(password_id)
-        update_password(password, label, to_encrypt)
+        updates = update_password(password, password_items)
+        for password, new_values in updates.items():
+            for key, value in new_values.items():
+                setattr(password, key, value)
+        db.session.commit()
         return redirect(url_for('display_passwords'))
 
     encrypted_password = db.session.query(Password).get(password_id)
@@ -76,7 +84,7 @@ def share_password_group(password_id):
                 password, group, current_user, session['private_key']
             )
             for password in passwords_to_add:
-                db.session.add(password)
+                db.session.add(Password(**password))
             db.session.commit()
         return redirect(url_for('display_passwords'))
 

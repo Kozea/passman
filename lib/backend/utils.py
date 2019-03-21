@@ -50,9 +50,7 @@ def create_user(login, password):
     return user
 
 
-def create_password(
-    user, password_items, parent_password=None, group_owning=None
-):
+def create_password(user, password_items, parent_password=None, groups=None):
     """
     Create a password.
     ``password_items`` are encrypted, except for the label.
@@ -67,7 +65,7 @@ def create_password(
         'session_key': b64encode(enc_session_key).decode('ascii'),
         'related_user_id': user.id,
         'parent': parent_password,
-        'groups': [group_owning] if group_owning else [],
+        'groups': groups if groups else [],
     }
 
     for key, value in password_items.items():
@@ -137,7 +135,9 @@ def share_to_group(password, group, current_user, private_key):
                     password_known.groups.append(group)
             else:
                 passwords_to_add.append(
-                    create_password(user, decrypted_password, password, group)
+                    create_password(
+                        user, decrypted_password, password, [group]
+                    )
                 )
         else:
             password.groups.append(group)
@@ -158,6 +158,17 @@ def get_password_family(password, family=None):
     return family
 
 
+def update_password(password, password_items):
+    """Return the list a password, and its family, updates."""
+    to_update = {}
+    password_family = get_password_family(password)
+    for member in password_family:
+        to_update[member] = create_password(
+            member.user, password_items.copy(), member.parent, member.groups
+        )
+    return to_update
+
+
 def update_group(group, label):
     """Update the name of a group to ``label``."""
     group.label = label
@@ -167,34 +178,6 @@ def update_group(group, label):
 def create_group(user, label):
     """Create a group named ``label`` and put user as a member  ``user``."""
     return Group(label=label, users=[user])
-
-
-# TODO
-def update_password(password, label, to_encrypt, updated=None, commit=True):
-    """Update a password."""
-    if updated is None:
-        updated = []
-
-    if password.id not in updated:
-        updated_password = create_password(
-            password.user, to_encrypt, label, password.parent, password.group
-        )
-        for key, value in updated_password.items():
-            setattr(password, key, value)
-
-        updated.append(password.id)
-
-        linked_passwords = list(password.children)
-        if password.parent:
-            linked_passwords.append(password.parent)
-
-        for linked_password in linked_passwords:
-            update_password(
-                linked_password, label, to_encrypt, updated, commit=False
-            )
-
-    if commit:
-        db.session.commit()
 
 
 # TODO
