@@ -143,6 +143,20 @@ def share_to_group(password, group, current_user, private_key):
     return passwords_to_add
 
 
+def get_password_family(password, family=None):
+    """Returns the list of the family of a password."""
+    if family is None:
+        family = set()
+    for child in password.children:
+        if child not in family:
+            family.add(child)
+            family | get_password_family(child, family)
+    if password.parent:
+        family.add(password.parent)
+        family | get_password_family(password.parent, family)
+    return family
+
+
 def update_group(group, label):
     """Update the name of a group to ``label``."""
     group.label = label
@@ -178,16 +192,6 @@ def update_password(password, label, to_encrypt, updated=None, commit=True):
                 linked_password, label, to_encrypt, updated, commit=False
             )
 
-    if commit:
-        db.session.commit()
-
-
-# TODO
-def remove_password(password, commit=True):
-    """Delete a password and its children."""
-    for child in password.children:
-        remove_password(child, commit=False)
-    db.session.delete(password)
     if commit:
         db.session.commit()
 

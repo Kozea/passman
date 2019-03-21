@@ -17,8 +17,8 @@ from ..utils import (
     create_user,
     decrypt_password,
     decrypt_private_key,
+    get_password_family,
     remove_group,
-    remove_password,
     share_to_group,
     update_group,
     update_password,
@@ -30,12 +30,15 @@ from ..utils import (
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
 def delete_password(password_id):
     password = db.session.query(Password).get(password_id)
+    user = db.session.query(User).get(session['user_id'])
 
-    if not password or password.owner_id != session['user_id']:
+    if not password or password not in user.passwords:
         flash('Can\'t do that', 'error')
         return redirect(url_for('display_passwords'))
 
-    remove_password(password, commit=True)
+    for password in get_password_family(password):
+        db.session.delete(password)
+    db.session.commit()
     return redirect(url_for('display_passwords'))
 
 
