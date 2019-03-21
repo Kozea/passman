@@ -209,7 +209,7 @@ def add_user():
             flash('Mail already used', 'error')
             return redirect(url_for('add_user'))
 
-        db.session.add(User(**create_user(input_mail, input_password)))
+        db.session.add(create_user(input_mail, input_password))
         db.session.commit()
         return redirect(url_for('connect'))
 
