@@ -154,7 +154,7 @@ def edit_group(group_id):
 def display_groups():
     user = db.session.query(User).get(session['user_id'])
     return render_template(
-        'display_groups.html', groups=user.groups, owned=user.groups_owned
+        'display_groups.html', groups=user.groups, owned=user.groups
     )
 
 
