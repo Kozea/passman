@@ -183,7 +183,7 @@ def add_group():
             db.session.query(User).get(session['user_id']),
             request.form['label'],
         )
-        db.session.add(group)
+        db.session.add(Group(**group))
         db.session.commit()
         return redirect(url_for('display_groups'))
 

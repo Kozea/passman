@@ -6,8 +6,6 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group
-
 
 def user_exists(login, users):
     """Check if an user with a certain ``login`` exists in a list of users."""
@@ -195,7 +193,7 @@ def update_group(group, label):
 
 def create_group(user, label):
     """Create a group named ``label`` and put user as a member  ``user``."""
-    return Group(label=label, users=[user])
+    return {'label': label, 'users': [user]}
 
 
 # TODO
