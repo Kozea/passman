@@ -18,7 +18,6 @@ from ..utils import (
     decrypt_password,
     decrypt_private_key,
     get_password_family,
-    remove_group,
     share_to_group,
     update_group,
     update_password,
@@ -140,7 +139,8 @@ def delete_group(group_id):
         return abort(404)
 
     if request.method == 'POST':
-        remove_group(group)
+        db.session.delete(group)
+        db.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('delete_group.html', group=group)

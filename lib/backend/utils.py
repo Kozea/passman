@@ -6,7 +6,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from passlib.hash import pbkdf2_sha256
 
-from .model import Group, db
+from .model import Group
 
 
 def user_exists(login, users):
@@ -199,17 +199,5 @@ def create_group(user, label):
 
 
 # TODO
-def remove_password(password):
-    pass
-
-
-# TODO
 def remove_user(user):
     pass
-
-
-# TODO
-def remove_group(group):
-    """Delete a group."""
-    db.session.delete(group)
-    db.session.commit()
