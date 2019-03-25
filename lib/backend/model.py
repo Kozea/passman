@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.engine import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, scoped_session, sessionmaker
+from sqlalchemy.orm import backref, relationship, scoped_session, sessionmaker
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.types import Integer, String
 
@@ -33,10 +33,19 @@ class Password(Base):
     related_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
 
-    parent = relationship('Password', remote_side=[id], backref='children')
-    user = relationship('User', backref='passwords')
+    parent = relationship(
+        'Password',
+        remote_side=[id],
+        backref=backref('children', cascade='all, delete, delete-orphan'),
+    )
+    user = relationship(
+        'User',
+        backref=backref('passwords', cascade='all, delete, delete-orphan'),
+    )
     groups = relationship(
-        'Group', secondary=PasswordGroup.__table__, backref='passwords'
+        'Group',
+        secondary=PasswordGroup.__table__,
+        backref=backref('passwords', cascade='all, delete'),
     )
 
 
@@ -55,8 +64,14 @@ class Request(Base):
     token = Column(String, nullable=False)
     timestamp = Column(Integer, nullable=False)
 
-    user = relationship('User', backref='requests')
-    group = relationship('Group', backref='requests')
+    user = relationship(
+        'User',
+        backref=backref('requests', cascade='all, delete, delete-orphan'),
+    )
+    group = relationship(
+        'Group',
+        backref=backref('requests', cascade='all, delete, delete-orphan'),
+    )
 
 
 class User(Base):

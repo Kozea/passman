@@ -133,7 +133,10 @@ def display_passwords():
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
 def delete_group(group_id):
     group = db.session.query(Group).get(group_id)
-    if not group or group.owner_id != session['user_id']:
+    if (
+        not group
+        or db.session.query(User).get(session['user_id']) not in group.users
+    ):
         return abort(404)
 
     if request.method == 'POST':
