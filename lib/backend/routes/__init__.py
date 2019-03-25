@@ -190,6 +190,16 @@ def add_group():
     return render_template('add_group.html')
 
 
+@app.route('/delete_user', methods=['GET', 'POST'])
+def delete_user():
+    if request.method == 'POST':
+        db.session.delete(db.session.query(User).get(session['user_id']))
+        db.session.commit()
+        return redirect(url_for('logout'))
+
+    return render_template('delete_user.html')
+
+
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
     if request.method == 'POST':

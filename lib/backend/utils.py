@@ -194,8 +194,3 @@ def update_group(group, label):
 def create_group(user, label):
     """Create a group named ``label`` and put user as a member  ``user``."""
     return {'label': label, 'users': [user]}
-
-
-# TODO
-def remove_user(user):
-    pass
