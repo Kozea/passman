@@ -1,7 +1,7 @@
 from base64 import b64decode, b64encode
 
 from ..backend import utils
-from ..backend.model import Password, User
+from ..backend.model import Group, Password, User
 from .conftest import PRIVATE_KEY
 
 
@@ -38,12 +38,11 @@ def test_decrypt_password(db_session):
 def test_create_group(db_session):
     user = db_session.query(User).get(1)
     group = utils.create_group(user, 'label')
-    assert group.label == 'label'
-    assert group.users == [user]
+    assert group['label'] == 'label'
+    assert group['users'] == [user]
 
 
 def test_update_group(db_session):
-    user = db_session.query(User).get(1)
-    group = utils.create_group(user, 'label')
-    updated_group = utils.update_group(group, 'new label')
-    assert updated_group.label == 'new label'
+    group = db_session.query(Group).get(1)
+    utils.update_group(group, 'new label')
+    assert group.label == 'new label'
