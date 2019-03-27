@@ -12,14 +12,12 @@ from passlib.hash import pbkdf2_sha256
 from .. import app
 from ..model import Group, Password, User, db
 from ..utils import (
-    create_group,
     create_password,
     create_user,
     decrypt_password,
     decrypt_private_key,
     get_password_family,
     share_to_group,
-    update_group,
     update_password,
     update_user,
     user_exists,
@@ -60,10 +58,7 @@ def edit_password(password_id):
             return redirect(url_for('edit_password', password_id=password_id))
 
         password = db.session.query(Password).get(password_id)
-        updates = update_password(password, password_items)
-        for password, new_values in updates.items():
-            for key, value in new_values.items():
-                setattr(password, key, value)
+        update_password(password, password_items)
         db.session.commit()
         return redirect(url_for('display_passwords'))
 
@@ -157,7 +152,7 @@ def edit_group(group_id):
             flash('Label is required', 'error')
             return redirect(url_for('edit_group', group_id=group_id))
 
-        update_group(group, request.form['label'])
+        group.label = request.form.get('label')
         db.session.commit()
         return redirect(url_for('display_groups'))
 
@@ -179,11 +174,12 @@ def add_group():
             flash('Label is required', 'error')
             return redirect(url_for('add_group'))
 
-        group = create_group(
-            db.session.query(User).get(session['user_id']),
-            request.form['label'],
+        db.session.add(
+            Group(
+                label=request.form.get('label'),
+                users=[db.session.query(User).get(session['user_id'])],
+            )
         )
-        db.session.add(Group(**group))
         db.session.commit()
         return redirect(url_for('display_groups'))
 

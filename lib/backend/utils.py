@@ -48,9 +48,9 @@ def create_user(login, password):
     return user
 
 
-def update_user(user, mail, password, private_key=None):
-    """
-    Update an user.
+def update_user(user, mail=None, password=None, private_key=None):
+    """Update an user.
+
     If his password is changed, his private key is re-encrypted.
     """
     if mail:
@@ -67,8 +67,8 @@ def update_user(user, mail, password, private_key=None):
 
 
 def create_password(user, password_items, parent_password=None, groups=None):
-    """
-    Create a password.
+    """Create a password.
+
     ``password_items`` are encrypted, except for the label.
     """
     public_key = RSA.import_key(b64decode(user.public_key))
@@ -81,7 +81,7 @@ def create_password(user, password_items, parent_password=None, groups=None):
         'session_key': b64encode(enc_session_key).decode('ascii'),
         'related_user_id': user.id,
         'parent': parent_password,
-        'groups': groups if groups else [],
+        'groups': groups or [],
     }
 
     for key, value in password_items.items():
@@ -119,7 +119,7 @@ def password_already_shared(password_to_find, passwords):
     """
     Check if a password was already shared by looking
     the password parent in a list of passwords.
-    If the password is the parent of an other password, its child is return.
+    If the password is the parent of another password, its child is returned.
     """
     if not passwords:
         return False
@@ -167,30 +167,19 @@ def get_password_family(password, family=None):
     for child in password.children:
         if child not in family:
             family.add(child)
-            family | get_password_family(child, family)
+            family = family | get_password_family(child, family)
     if password.parent:
         family.add(password.parent)
-        family | get_password_family(password.parent, family)
+        family = family | get_password_family(password.parent, family)
     return family
 
 
 def update_password(password, password_items):
     """Return the list a password, and its family, updates."""
-    to_update = {}
     password_family = get_password_family(password)
     for member in password_family:
-        to_update[member] = create_password(
+        new_password = create_password(
             member.user, password_items.copy(), member.parent, member.groups
         )
-    return to_update
-
-
-def update_group(group, label):
-    """Update the name of a group to ``label``."""
-    group.label = label
-    return group
-
-
-def create_group(user, label):
-    """Create a group named ``label`` and put user as a member  ``user``."""
-    return {'label': label, 'users': [user]}
+        for key, value in new_password.items():
+            setattr(member, key, value)
