@@ -161,6 +161,16 @@ def share_to_group(password, group, current_user, private_key):
     return passwords_to_add
 
 
+def share_to_user(password, user, group, private_key):
+    decrypted_password = decrypt_password(password, private_key)
+    # Pop id and groups as they're not needed for creation
+    decrypted_password.pop('id')
+    decrypted_password.pop('groups')
+    return create_password(
+        user, decrypted_password, password.family_key, [group]
+    )
+
+
 def update_password(password, password_items):
     """Return the list a password, and its family, updates."""
     for member in password.family:

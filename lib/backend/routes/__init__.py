@@ -17,6 +17,7 @@ from ..utils import (
     decrypt_password,
     decrypt_private_key,
     share_to_group,
+    share_to_user,
     update_password,
     update_user,
     user_exists,
@@ -236,6 +237,61 @@ def add_user():
         return redirect(url_for('connect'))
 
     return render_template('add_user.html')
+
+
+@app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
+def add_user_group(group_id):
+    group = db.session.query(Group).get(group_id)
+
+    if request.method == 'POST':
+        input_mail = request.form.get('mail')
+        if not input_mail:
+            flash('No mail provided', 'error')
+            return redirect(url_for('add_user_group'))
+        if '@' not in input_mail:
+            flash('Mail malformed', 'error')
+            return redirect(url_for('add_user_group'))
+        new_user = user_exists(input_mail, db.session.query(User))
+        if new_user:
+            group.users.append(new_user)
+            group_passwords = (
+                db.session.query(Password)
+                .filter_by(related_user_id=session['user_id'])
+                .filter(Password.groups.contains(group))
+            )
+            for password in group_passwords:
+                db.session.add(
+                    Password(
+                        **share_to_user(
+                            password, new_user, group, session['private_key']
+                        )
+                    )
+                )
+            db.session.commit()
+
+        return redirect(url_for('display_passwords'))
+
+    return render_template('add_user_group.html')
+
+
+@app.route('/quit_group/<int:group_id>', methods=['GET', 'POST'])
+def quit_group(group_id):
+    group = db.session.query(Group).get(group_id)
+
+    if request.method == 'POST':
+        passwords = (
+            db.session.query(Password)
+            .filter_by(related_user_id=session['user_id'])
+            .filter(Password.groups.contains(group))
+        )
+        for password in passwords:
+            db.session.delete(password)
+        group.users.remove(db.session.query(User).get(session['user_id']))
+        db.session.commit()
+
+        return redirect(url_for('display_passwords'))
+
+    return render_template('quit_group.html', group=group)
 
 
 @app.route('/logout')
