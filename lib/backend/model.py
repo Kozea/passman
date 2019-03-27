@@ -65,22 +65,6 @@ class UserGroup(Base):
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
 
-class Request(Base):
-    __tablename__ = 'request'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    group_id = Column(Integer, ForeignKey('group.id'), nullable=False)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    token = Column(String, nullable=False)
-    timestamp = Column(Integer, nullable=False)
-
-    user = relationship(
-        'User', backref=backref('requests', cascade='all, delete')
-    )
-    group = relationship(
-        'Group', backref=backref('requests', cascade='all, delete')
-    )
-
-
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, autoincrement=True)

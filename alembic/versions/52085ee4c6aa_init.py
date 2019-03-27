@@ -53,17 +53,6 @@ def upgrade():
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_table(
-        'request',
-        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('group_id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=False),
-        sa.Column('token', sa.String(), nullable=False),
-        sa.Column('timestamp', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['group_id'], ['group.id']),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id']),
-        sa.PrimaryKeyConstraint('id'),
-    )
-    op.create_table(
         'usergroup',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('group_id', sa.Integer(), nullable=False),
