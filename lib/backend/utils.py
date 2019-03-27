@@ -1,3 +1,4 @@
+import uuid
 from base64 import b64decode, b64encode
 
 from Crypto.Cipher import AES, PKCS1_OAEP, ChaCha20
@@ -66,7 +67,7 @@ def update_user(user, mail=None, password=None, private_key=None):
         user.nonce = b64encode(nonce).decode('ascii')
 
 
-def create_password(user, password_items, parent_password=None, groups=None):
+def create_password(user, password_items, family_key=None, groups=None):
     """Create a password.
 
     ``password_items`` are encrypted, except for the label.
@@ -80,8 +81,8 @@ def create_password(user, password_items, parent_password=None, groups=None):
         'label': password_items.pop('label'),
         'session_key': b64encode(enc_session_key).decode('ascii'),
         'related_user_id': user.id,
-        'parent': parent_password,
         'groups': groups or [],
+        'family_key': family_key or uuid.uuid4().hex,
     }
 
     for key, value in password_items.items():
@@ -152,7 +153,7 @@ def share_to_group(password, group, current_user, private_key):
             else:
                 passwords_to_add.append(
                     create_password(
-                        user, decrypted_password, password, [group]
+                        user, decrypted_password, password.family_key, [group]
                     )
                 )
         else:
@@ -160,26 +161,14 @@ def share_to_group(password, group, current_user, private_key):
     return passwords_to_add
 
 
-def get_password_family(password, family=None):
-    """Returns the list of the family of a password."""
-    if family is None:
-        family = set()
-    for child in password.children:
-        if child not in family:
-            family.add(child)
-            family = family | get_password_family(child, family)
-    if password.parent:
-        family.add(password.parent)
-        family = family | get_password_family(password.parent, family)
-    return family
-
-
 def update_password(password, password_items):
     """Return the list a password, and its family, updates."""
-    password_family = get_password_family(password)
-    for member in password_family:
+    for member in password.family:
         new_password = create_password(
-            member.user, password_items.copy(), member.parent, member.groups
+            member.user,
+            password_items.copy(),
+            password.family_key,
+            member.groups,
         )
         for key, value in new_password.items():
             setattr(member, key, value)

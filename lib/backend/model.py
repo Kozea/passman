@@ -1,7 +1,14 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.engine import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relationship, scoped_session, sessionmaker
+from sqlalchemy.orm import (
+    backref,
+    foreign,
+    relationship,
+    remote,
+    scoped_session,
+    sessionmaker,
+)
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.types import Integer, String
 
@@ -30,15 +37,10 @@ class Password(Base):
     notes_nonce = Column(String, nullable=True)
     session_key = Column(String, nullable=False)
 
-    related_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
-    parent_id = Column(Integer, ForeignKey('password.id'), nullable=True)
+    family_key = Column(String, nullable=False)
 
-    parent = relationship(
-        'Password',
-        remote_side=[id],
-        cascade='all, delete',
-        backref=backref('children', cascade='all, delete'),
-    )
+    related_user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
     user = relationship(
         'User', backref=backref('passwords', cascade='all, delete')
     )
@@ -46,6 +48,13 @@ class Password(Base):
         'Group',
         secondary=PasswordGroup.__table__,
         backref=backref('passwords', cascade='all, delete'),
+    )
+
+    family = relationship(
+        'Password',
+        primaryjoin=remote(family_key) == foreign(family_key),
+        uselist=True,
+        viewonly=True,
     )
 
 

@@ -27,7 +27,7 @@ insert into usergroup(id, user_id, group_id) values
 	(3, 1, 2),
 	(4, 2, 2);
 
-insert into password(id, label, login, login_tag, login_nonce, password, password_tag, password_nonce, notes, notes_tag, notes_nonce, session_key, related_user_id) values
-	(1, 'one super password', 'NxdlWps=', 'Du0DzMk65V5kH7/2PCH5Nw==', 'pDFYv5n1VoBJ+eYSXi3eMw==', '3exN05y7GGI=', 'Qiy/fxzmB4Akn3AlDTn/Yw==', 'nHBs41smp/ebtwwWCzB6NA==', 'FI3LRuEXSYPM', '7oiq6hSzsjMreekGMISwaw==', 'CHjozafNkLWcUzzs5UffWQ==', 'BUr8C3Hh827iyKs2/E5eeNyKXKlNJAwFt5r0EsRE56fbS9I5jO5NWt2teQ4c05PZGjDi4tmivHRRBa+JtLbQF2nZiM6Xu1jyd8rHGW45drFNb9EOnie6fTU6EI9EB7cp+r0lMWgf/MExGoftEfUQPGEZP9+yGmfHPXHCfIZzE63tg/9Go77fdsc4wmL7U8uB13sT/wroVR3RG8imitjmme9TyFEz1mgijCkC5771VFrY1CtQ8P4PXeUJu9DjsdXy8dT0KeMXbgJwkg8YUPxLV7iB7ljRiPjvD8k4jkpnKB3X9nDz0zoRsCWao79PDkyxzf5ch2rXL6vzRG84zk40hQ==', 1);
+insert into password(id, label, login, login_tag, login_nonce, password, password_tag, password_nonce, notes, notes_tag, notes_nonce, session_key, related_user_id, family_key) values
+	(1, 'one super password', 'NxdlWps=', 'Du0DzMk65V5kH7/2PCH5Nw==', 'pDFYv5n1VoBJ+eYSXi3eMw==', '3exN05y7GGI=', 'Qiy/fxzmB4Akn3AlDTn/Yw==', 'nHBs41smp/ebtwwWCzB6NA==', 'FI3LRuEXSYPM', '7oiq6hSzsjMreekGMISwaw==', 'CHjozafNkLWcUzzs5UffWQ==', 'BUr8C3Hh827iyKs2/E5eeNyKXKlNJAwFt5r0EsRE56fbS9I5jO5NWt2teQ4c05PZGjDi4tmivHRRBa+JtLbQF2nZiM6Xu1jyd8rHGW45drFNb9EOnie6fTU6EI9EB7cp+r0lMWgf/MExGoftEfUQPGEZP9+yGmfHPXHCfIZzE63tg/9Go77fdsc4wmL7U8uB13sT/wroVR3RG8imitjmme9TyFEz1mgijCkC5771VFrY1CtQ8P4PXeUJu9DjsdXy8dT0KeMXbgJwkg8YUPxLV7iB7ljRiPjvD8k4jkpnKB3X9nDz0zoRsCWao79PDkyxzf5ch2rXL6vzRG84zk40hQ==', 1, 'lol');
 
 commit;

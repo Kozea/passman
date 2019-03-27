@@ -16,7 +16,6 @@ from ..utils import (
     create_user,
     decrypt_password,
     decrypt_private_key,
-    get_password_family,
     share_to_group,
     update_password,
     update_user,
@@ -33,7 +32,7 @@ def delete_password(password_id):
         flash('Can\'t do that', 'error')
         return redirect(url_for('display_passwords'))
 
-    for password in get_password_family(password):
+    for password in password.family:
         db.session.delete(password)
     db.session.commit()
     return redirect(url_for('display_passwords'))
