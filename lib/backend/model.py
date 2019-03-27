@@ -36,11 +36,11 @@ class Password(Base):
     parent = relationship(
         'Password',
         remote_side=[id],
-        backref=backref('children', cascade='all, delete, delete-orphan'),
+        cascade='all, delete',
+        backref=backref('children', cascade='all, delete'),
     )
     user = relationship(
-        'User',
-        backref=backref('passwords', cascade='all, delete, delete-orphan'),
+        'User', backref=backref('passwords', cascade='all, delete')
     )
     groups = relationship(
         'Group',
@@ -65,12 +65,10 @@ class Request(Base):
     timestamp = Column(Integer, nullable=False)
 
     user = relationship(
-        'User',
-        backref=backref('requests', cascade='all, delete, delete-orphan'),
+        'User', backref=backref('requests', cascade='all, delete')
     )
     group = relationship(
-        'Group',
-        backref=backref('requests', cascade='all, delete, delete-orphan'),
+        'Group', backref=backref('requests', cascade='all, delete')
     )
 
 
