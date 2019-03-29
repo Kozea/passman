@@ -153,7 +153,10 @@ def share_to_group(password, group, current_user, private_key):
             else:
                 passwords_to_add.append(
                     create_password(
-                        user, decrypted_password, password.family_key, [group]
+                        user,
+                        decrypted_password.copy(),
+                        password.family_key,
+                        [group],
                     )
                 )
         else:
