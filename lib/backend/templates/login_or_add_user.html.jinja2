@@ -1,0 +1,29 @@
+{% extends '_layout.html.jinja2' %}
+{% block content %}
+
+<nav>
+  <ul>
+    <li>
+      <a href="{{ url_for('login') }}">Se connecter</a>
+    </li>
+    <li>
+      <a href="{{ url_for('add_user') }}">Créer un compte</a>
+    </li>
+  </ul>
+</nav>
+
+{% if login %}
+  <form action="{{ url_for('login') }}" method="POST">
+{% elif add_user %}
+  <form action="{{ url_for('add_user') }}" method="POST">
+{% endif %}
+  <label>Identifiant
+    <input name="login" required/>
+  </label>
+  <label>Mot de passe
+    <input name="password" type="password" required/>
+  </label>
+  <input type="submit" value="Se connecter"/>
+</form>
+
+{% endblock %}

@@ -237,7 +237,7 @@ def add_user():
         g.session.commit()
         return redirect(url_for('login'))
 
-    return render_template('add_user.html')
+    return render_template('login_or_add_user.html.jinja2', add_user=True)
 
 
 @app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
@@ -304,7 +304,7 @@ def logout():
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        input_password = request.form['password']
+        input_password = request.form.get('password')
         user = user_exists(request.form.get('login'), g.session.query(User))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
@@ -315,4 +315,4 @@ def login():
         session['user_id'] = user.id
         return redirect(url_for('display_passwords'))
 
-    return render_template('connection.html')
+    return render_template('login_or_add_user.html.jinja2', login=True)
