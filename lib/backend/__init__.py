@@ -5,15 +5,16 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import Flask
+from flask import Flask, g, session
+from sqlalchemy.engine import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from .model import db
+from .model import User
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 app = Flask(__name__)
 app.config.from_envvar('FLASK_CONFIG')
-db.init_app(app)
 
 
 def drop_db():
@@ -32,6 +33,23 @@ def install_dev_data():
 
 app.cli.command()(install_dev_data)
 app.cli.command()(drop_db)
+
+
+@app.before_request
+def before_request():
+    g.context = {}
+    db = app.config['DB']
+    g.session = sessionmaker(bind=create_engine(db), autoflush=False)()
+    if 'user_id' in session:
+        g.context['user'] = g.session.query(User).get(session['user_id'])
+    else:
+        g.context['user'] = None
+
+
+@app.after_request
+def after_request(response):
+    g.session.close()
+    return response
 
 
 if app.debug:

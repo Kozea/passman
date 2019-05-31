@@ -1,6 +1,7 @@
 from flask import (
     abort,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -10,7 +11,7 @@ from flask import (
 from passlib.hash import pbkdf2_sha256
 
 from .. import app
-from ..model import Group, Password, User, db
+from ..model import Group, Password, User
 from ..utils import (
     create_password,
     create_user,
@@ -26,16 +27,16 @@ from ..utils import (
 
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
 def delete_password(password_id):
-    password = db.session.query(Password).get(password_id)
-    user = db.session.query(User).get(session['user_id'])
+    password = g.session.query(Password).get(password_id)
+    user = g.session.query(User).get(session['user_id'])
 
     if not password or password not in user.passwords:
         flash('Can\'t do that', 'error')
         return redirect(url_for('display_passwords'))
 
     for password in password.family:
-        db.session.delete(password)
-    db.session.commit()
+        g.session.delete(password)
+    g.session.commit()
     return redirect(url_for('display_passwords'))
 
 
@@ -57,12 +58,12 @@ def edit_password(password_id):
             flash('Label, login and password are all required', 'error')
             return redirect(url_for('edit_password', password_id=password_id))
 
-        password = db.session.query(Password).get(password_id)
+        password = g.session.query(Password).get(password_id)
         update_password(password, password_items)
-        db.session.commit()
+        g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    encrypted_password = db.session.query(Password).get(password_id)
+    encrypted_password = g.session.query(Password).get(password_id)
     password = decrypt_password(encrypted_password, session['private_key'])
     return render_template('edit_password.html', password=password)
 
@@ -71,18 +72,18 @@ def edit_password(password_id):
 def share_password_group(password_id):
     if request.method == 'POST':
         if request.form:
-            current_user = db.session.query(User).get(session['user_id'])
-            password = db.session.query(Password).get(password_id)
-            group = db.session.query(Group).get(request.form.get('group'))
+            current_user = g.session.query(User).get(session['user_id'])
+            password = g.session.query(Password).get(password_id)
+            group = g.session.query(Group).get(request.form.get('group'))
             passwords_to_add = share_to_group(
                 password, group, current_user, session['private_key']
             )
             for password in passwords_to_add:
-                db.session.add(Password(**password))
-            db.session.commit()
+                g.session.add(Password(**password))
+            g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    groups = db.session.query(User).get(session['user_id']).groups
+    groups = g.session.query(User).get(session['user_id']).groups
     return render_template('share_password_group.html', groups=groups)
 
 
@@ -104,9 +105,9 @@ def add_password():
             flash('Label, login and password are all required', 'error')
             return redirect(url_for('add_password'))
 
-        user = db.session.query(User).get(session['user_id'])
-        db.session.add(Password(**create_password(user, password_items)))
-        db.session.commit()
+        user = g.session.query(User).get(session['user_id'])
+        g.session.add(Password(**create_password(user, password_items)))
+        g.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('add_password.html')
@@ -114,7 +115,7 @@ def add_password():
 
 @app.route('/display_passwords')
 def display_passwords():
-    passwords = db.session.query(User).get(session['user_id']).passwords
+    passwords = g.session.query(User).get(session['user_id']).passwords
     decrypted_passwords = {
         password.id: decrypt_password(password, session['private_key'])
         for password in passwords
@@ -126,16 +127,16 @@ def display_passwords():
 
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
 def delete_group(group_id):
-    group = db.session.query(Group).get(group_id)
+    group = g.session.query(Group).get(group_id)
     if (
         not group
-        or db.session.query(User).get(session['user_id']) not in group.users
+        or g.session.query(User).get(session['user_id']) not in group.users
     ):
         return abort(404)
 
     if request.method == 'POST':
-        db.session.delete(group)
-        db.session.commit()
+        g.session.delete(group)
+        g.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('delete_group.html', group=group)
@@ -143,7 +144,7 @@ def delete_group(group_id):
 
 @app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
 def edit_group(group_id):
-    group = db.session.query(Group).get(group_id)
+    group = g.session.query(Group).get(group_id)
     if group is None:
         return abort(404)
 
@@ -153,7 +154,7 @@ def edit_group(group_id):
             return redirect(url_for('edit_group', group_id=group_id))
 
         group.label = request.form.get('label')
-        db.session.commit()
+        g.session.commit()
         return redirect(url_for('display_groups'))
 
     return render_template('edit_group.html', group=group)
@@ -161,7 +162,7 @@ def edit_group(group_id):
 
 @app.route('/display_groups')
 def display_groups():
-    user = db.session.query(User).get(session['user_id'])
+    user = g.session.query(User).get(session['user_id'])
     return render_template(
         'display_groups.html', groups=user.groups, owned=user.groups
     )
@@ -174,13 +175,13 @@ def add_group():
             flash('Label is required', 'error')
             return redirect(url_for('add_group'))
 
-        db.session.add(
+        g.session.add(
             Group(
                 label=request.form.get('label'),
-                users=[db.session.query(User).get(session['user_id'])],
+                users=[g.session.query(User).get(session['user_id'])],
             )
         )
-        db.session.commit()
+        g.session.commit()
         return redirect(url_for('display_groups'))
 
     return render_template('add_group.html')
@@ -189,8 +190,8 @@ def add_group():
 @app.route('/delete_user', methods=['GET', 'POST'])
 def delete_user():
     if request.method == 'POST':
-        db.session.delete(db.session.query(User).get(session['user_id']))
-        db.session.commit()
+        g.session.delete(g.session.query(User).get(session['user_id']))
+        g.session.commit()
         return redirect(url_for('logout'))
 
     return render_template('delete_user.html')
@@ -199,18 +200,18 @@ def delete_user():
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
     if request.method == 'POST':
-        if user_exists(request.form['mail'], db.session.query(User)):
+        if user_exists(request.form['mail'], g.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('edit_user'))
 
         mail = request.form['mail']
         password = request.form['password']
-        user = db.session.query(User).get(session['user_id'])
+        user = g.session.query(User).get(session['user_id'])
         if password:
             update_user(user, mail, password, session['private_key'])
         else:
             update_user(user, mail, password)
-        db.session.commit()
+        g.session.commit()
         return redirect(url_for('logout'))
 
     return render_template('edit_user.html')
@@ -228,20 +229,20 @@ def add_user():
         if '@' not in input_mail:
             flash('Mail malformed', 'error')
             return redirect(url_for('add_user'))
-        if user_exists(input_mail, db.session.query(User)):
+        if user_exists(input_mail, g.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('add_user'))
 
-        db.session.add(User(**create_user(input_mail, input_password)))
-        db.session.commit()
-        return redirect(url_for('connect'))
+        g.session.add(User(**create_user(input_mail, input_password)))
+        g.session.commit()
+        return redirect(url_for('login'))
 
     return render_template('add_user.html')
 
 
 @app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
 def add_user_group(group_id):
-    group = db.session.query(Group).get(group_id)
+    group = g.session.query(Group).get(group_id)
 
     if request.method == 'POST':
         input_mail = request.form.get('mail')
@@ -251,23 +252,23 @@ def add_user_group(group_id):
         if '@' not in input_mail:
             flash('Mail malformed', 'error')
             return redirect(url_for('add_user_group'))
-        new_user = user_exists(input_mail, db.session.query(User))
+        new_user = user_exists(input_mail, g.session.query(User))
         if new_user:
             group.users.append(new_user)
             group_passwords = (
-                db.session.query(Password)
+                g.session.query(Password)
                 .filter_by(related_user_id=session['user_id'])
                 .filter(Password.groups.contains(group))
             )
             for password in group_passwords:
-                db.session.add(
+                g.session.add(
                     Password(
                         **share_to_user(
                             password, new_user, group, session['private_key']
                         )
                     )
                 )
-            db.session.commit()
+            g.session.commit()
 
         return redirect(url_for('display_passwords'))
 
@@ -276,18 +277,18 @@ def add_user_group(group_id):
 
 @app.route('/quit_group/<int:group_id>', methods=['GET', 'POST'])
 def quit_group(group_id):
-    group = db.session.query(Group).get(group_id)
+    group = g.session.query(Group).get(group_id)
 
     if request.method == 'POST':
         passwords = (
-            db.session.query(Password)
+            g.session.query(Password)
             .filter_by(related_user_id=session['user_id'])
             .filter(Password.groups.contains(group))
         )
         for password in passwords:
-            db.session.delete(password)
-        group.users.remove(db.session.query(User).get(session['user_id']))
-        db.session.commit()
+            g.session.delete(password)
+        group.users.remove(g.session.query(User).get(session['user_id']))
+        g.session.commit()
 
         return redirect(url_for('display_passwords'))
 
@@ -297,18 +298,18 @@ def quit_group(group_id):
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('connect'))
+    return redirect(url_for('login'))
 
 
 @app.route('/', methods=['GET', 'POST'])
-def connect():
+def login():
     if request.method == 'POST':
         input_password = request.form['password']
-        user = user_exists(request.form.get('login'), db.session.query(User))
+        user = user_exists(request.form.get('login'), g.session.query(User))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
             flash('Login or password incorrect', 'error')
-            return redirect(url_for('connect'))
+            return redirect(url_for('login'))
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id

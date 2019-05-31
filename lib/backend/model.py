@@ -1,14 +1,6 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.engine import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (
-    backref,
-    foreign,
-    relationship,
-    remote,
-    scoped_session,
-    sessionmaker,
-)
+from sqlalchemy.orm import backref, foreign, relationship, remote
 from sqlalchemy.sql.schema import Column
 from sqlalchemy.types import Integer, String
 
@@ -83,22 +75,3 @@ class Group(Base):
     __tablename__ = 'group'
     id = Column(Integer, primary_key=True, autoincrement=True)
     label = Column(String, nullable=False)
-
-
-class Db(object):
-    def __init__(self):
-        self.metadata = Base.metadata
-        self.Session = sessionmaker()
-
-    def init_app(self, app):
-        self.app = app
-        self.engine = create_engine(app.config['DB'])
-        self.Session.configure(bind=self.engine)
-        self.session = scoped_session(self.Session)
-
-        @app.teardown_appcontext
-        def teardown_appcontext(*args, **kwargs):
-            db.session.remove()
-
-
-db = Db()
