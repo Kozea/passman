@@ -1,3 +1,18 @@
+{% macro nav() %}
+  {% if g.context.user %}
+    <ul>
+        <li>mes notes</li>
+        <li>groupes</li>
+    </ul>
+    <ul>
+        <li>mon profil</li>
+        <li>me déconnecter</li>
+    </ul>
+  {% else %}
+    <ul></ul>
+  {% endif %}
+{% endmacro %}
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -7,6 +22,10 @@
   </head>
 
   <body>
+    <header>
+      {{ nav() }}
+    </header>
+
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <aside>
@@ -19,7 +38,9 @@
       {% endif %}
     {% endwith %}
 
-    {% block content %}
-    {% endblock %}
+    <main>
+      {% block content %}
+      {% endblock %}
+    </main>
   </body>
 </html>
