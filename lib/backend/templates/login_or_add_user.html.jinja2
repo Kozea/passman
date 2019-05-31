@@ -23,7 +23,11 @@
   <label>Mot de passe
     <input name="password" type="password" required/>
   </label>
+{% if login %}
   <input type="submit" value="Se connecter"/>
+{% elif add_user %}
+  <input type="submit" value="Créer mon compte"/>
+{% endif %}
 </form>
 
 {% endblock %}
