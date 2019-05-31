@@ -1,12 +1,18 @@
 {% macro nav() %}
   {% if g.context.user %}
     <ul>
-        <li>mes notes</li>
-        <li>groupes</li>
+        <li>
+          <a href="{{ url_for('display_passwords') }}">mes notes</a>
+        </li>
+        <li>
+          <a href="{{ url_for('display_groups') }}">groupes</a>
+        </li>
     </ul>
     <ul>
         <li>mon profil</li>
-        <li>me déconnecter</li>
+        <li>
+          <a href="{{ url_for('logout') }}">me déconnecter</a>
+        </li>
     </ul>
   {% else %}
     <ul></ul>
