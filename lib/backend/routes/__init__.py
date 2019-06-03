@@ -113,18 +113,6 @@ def add_password():
     return render_template('add_password.html')
 
 
-@app.route('/display_passwords')
-def display_passwords():
-    passwords = g.session.query(User).get(session['user_id']).passwords
-    decrypted_passwords = {
-        password.id: decrypt_password(password, session['private_key'])
-        for password in passwords
-    }
-    return render_template(
-        'display_passwords.html', passwords=decrypted_passwords
-    )
-
-
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
 def delete_group(group_id):
     group = g.session.query(Group).get(group_id)
@@ -301,7 +289,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
         input_password = request.form.get('password')
@@ -316,3 +304,18 @@ def login():
         return redirect(url_for('display_passwords'))
 
     return render_template('login_or_add_user.html.jinja2', login=True)
+
+
+@app.route('/')
+def display_passwords():
+    if session.get('user_id'):
+        passwords = g.session.query(User).get(session['user_id']).passwords
+        decrypted_passwords = {
+            password.id: decrypt_password(password, session['private_key'])
+            for password in passwords
+        }
+        return render_template(
+            'display_passwords.html', passwords=decrypted_passwords
+        )
+    else:
+        return redirect(url_for('login'))
