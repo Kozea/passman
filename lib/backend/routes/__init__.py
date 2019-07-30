@@ -316,15 +316,16 @@ def display_passwords():
 @app.route('/display_groups_passwords')
 def display_groups_passwords():
     user = g.session.query(User).get(session['user_id'])
-    groups_passwords = []
+    groups_passwords = {}
     for group in user.groups:
         groups_passwords[group.id] = {
             'label': group.label,
             'passwords': {
                 password.id: decrypt_password(password, session['private_key'])
                 for password in group.passwords
-                if password and password.related_user_id == session['user_id']
+                if password.related_user_id == session['user_id']
             },
+            'total_members': len(group.users),
         }
     return render_template(
         'display_groups_passwords.html', groups_passwords=groups_passwords
