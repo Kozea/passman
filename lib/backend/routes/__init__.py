@@ -148,14 +148,6 @@ def edit_group(group_id):
     return render_template('edit_group.html', group=group)
 
 
-@app.route('/display_groups')
-def display_groups():
-    user = g.session.query(User).get(session['user_id'])
-    return render_template(
-        'display_groups.html', groups=user.groups, owned=user.groups
-    )
-
-
 @app.route('/add_group', methods=['GET', 'POST'])
 def add_group():
     if request.method == 'POST':
@@ -319,3 +311,21 @@ def display_passwords():
         )
     else:
         return redirect(url_for('login'))
+
+
+@app.route('/display_groups_passwords')
+def display_groups_passwords():
+    user = g.session.query(User).get(session['user_id'])
+    groups_passwords = []
+    for group in user.groups:
+        groups_passwords[group.id] = {
+            'label': group.label,
+            'passwords': {
+                password.id: decrypt_password(password, session['private_key'])
+                for password in group.passwords
+                if password and password.related_user_id == session['user_id']
+            },
+        }
+    return render_template(
+        'display_groups_passwords.html', groups_passwords=groups_passwords
+    )
