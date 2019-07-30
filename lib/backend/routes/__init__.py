@@ -304,7 +304,7 @@ def display_passwords():
         passwords = g.session.query(User).get(session['user_id']).passwords
         decrypted_passwords = {
             password.id: decrypt_password(password, session['private_key'])
-            for password in passwords
+            for password in passwords if not password.groups
         }
         return render_template(
             'display_passwords.html', passwords=decrypted_passwords
