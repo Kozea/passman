@@ -125,8 +125,8 @@ def password_already_shared(password_to_find, passwords):
     if not passwords:
         return False
     for password in passwords:
-        if (password.family_key and
-                password.family_key == password_to_find.family_key):
+        if (password.family_key
+                and password.family_key == password_to_find.family_key):
             return password
 
 
