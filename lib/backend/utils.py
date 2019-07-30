@@ -125,12 +125,9 @@ def password_already_shared(password_to_find, passwords):
     if not passwords:
         return False
     for password in passwords:
-        if password.parent and password.parent == password_to_find:
+        if (password.family_key and
+                password.family_key == password_to_find.family_key):
             return password
-    password_already_shared(
-        password_to_find,
-        [password.parent for password in passwords if password.parent],
-    )
 
 
 def share_to_group(password, group, current_user, private_key):
