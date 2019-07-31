@@ -1,15 +1,17 @@
 {% extends '_layout.html.jinja2' %}
 {% block content %}
 
+<h2>Mettre à jour mon profil</h2>
+
 <form method="POST">
   <label>Mail
     <input name="mail"/>
   </label>
-  <label>Password
+  <label>Mot de passe
     <input name="password" type="password"/>
   </label>
 
-  <input type="submit" value="Update"/>
+  <input type="submit" value="Mettre à jour"/>
 </form>
 
 {% endblock %}

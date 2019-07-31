@@ -1,11 +1,13 @@
 {% extends '_layout.html.jinja2' %}
 {% block content %}
 
+<h2>Nouveau groupe</h2>
+
 <form method="POST">
-  <label>Label*
+  <label>Nom
     <input name="label" required/>
   </label>
-  <input type="submit" value="Add"/>
+  <input type="submit" value="Créer"/>
 </form>
 
 {% endblock %}
