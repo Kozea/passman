@@ -1,28 +1,13 @@
 from flask import (
-    abort,
-    flash,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
+    abort, flash, g, redirect, render_template, request, session, url_for)
 from passlib.hash import pbkdf2_sha256
 
 from .. import app
+from ..forms import GroupForm, PasswordForm
 from ..model import Group, Password, User
 from ..utils import (
-    create_password,
-    create_user,
-    decrypt_password,
-    decrypt_private_key,
-    share_to_group,
-    share_to_user,
-    update_password,
-    update_user,
-    user_exists,
-)
+    create_password, create_user, decrypt_password, decrypt_private_key,
+    share_to_group, share_to_user, update_password, update_user, user_exists)
 
 
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
@@ -89,7 +74,9 @@ def share_password_group(password_id):
 
 @app.route('/add_password', methods=['GET', 'POST'])
 def add_password():
-    if request.method == 'POST':
+    form = PasswordForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
         password_items = {
             'label': request.form.get('label'),
             'login': request.form.get('login'),
@@ -97,29 +84,19 @@ def add_password():
             'notes': request.form.get('notes'),
         }
 
-        if not (
-            password_items['login']
-            or not password_items['password']
-            or not password_items['label']
-        ):
-            flash('Label, login and password are all required', 'error')
-            return redirect(url_for('add_password'))
-
         user = g.session.query(User).get(session['user_id'])
         g.session.add(Password(**create_password(user, password_items)))
         g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    return render_template('add_password.html')
+    return render_template('password.html.jinja2', form=form)
 
 
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
 def delete_group(group_id):
     group = g.session.query(Group).get(group_id)
-    if (
-        not group
-        or g.session.query(User).get(session['user_id']) not in group.users
-    ):
+    if (not group or
+            g.session.query(User).get(session['user_id']) not in group.users):
         return abort(404)
 
     if request.method == 'POST':
@@ -136,35 +113,28 @@ def edit_group(group_id):
     if group is None:
         return abort(404)
 
-    if request.method == 'POST':
-        if not request.form.get('label'):
-            flash('Label is required', 'error')
-            return redirect(url_for('edit_group', group_id=group_id))
-
+    form = GroupForm(request.form or None, obj=group)
+    if request.method == 'POST' and form.validate():
         group.label = request.form.get('label')
         g.session.commit()
-        return redirect(url_for('display_groups'))
+        return redirect(url_for('display_groups_passwords'))
 
-    return render_template('edit_group.html', group=group)
+    return render_template('group.html.jinja2', form=form, edit=True)
 
 
 @app.route('/add_group', methods=['GET', 'POST'])
 def add_group():
-    if request.method == 'POST':
-        if not request.form.get('label'):
-            flash('Label is required', 'error')
-            return redirect(url_for('add_group'))
+    form = GroupForm(request.form or None)
 
-        g.session.add(
-            Group(
-                label=request.form.get('label'),
-                users=[g.session.query(User).get(session['user_id'])],
-            )
-        )
+    if request.method == 'POST' and form.validate():
+        group = Group()
+        form.populate_obj(group)
+        group.users = [g.session.query(User).get(session['user_id'])]
+        g.session.add(group)
         g.session.commit()
-        return redirect(url_for('display_groups'))
+        return redirect(url_for('display_groups_passwords'))
 
-    return render_template('add_group.html')
+    return render_template('group.html.jinja2', form=form)
 
 
 @app.route('/delete_user', methods=['GET', 'POST'])

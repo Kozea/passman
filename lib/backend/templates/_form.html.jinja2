@@ -1,0 +1,15 @@
+{% macro display_field(field, readonly=False) %}
+  <label class="{{ 'required' if field.flags.required }} {{ 'error' if field.errors }}">
+    {{ field.label.text }}
+    {{ field(readonly=True, onclick='return false;') if readonly else field }}
+    {% for error in field.errors %}
+      <span class="error">{{ error }}</span>
+    {% endfor %}
+  </label>
+{% endmacro %}
+
+{% macro display_form(form) %}
+  {% for form_field in form %}
+    {{ display_field(form_field) }}
+  {% endfor %}
+{% endmacro %}
