@@ -2,9 +2,7 @@
 {% block content %}
 
 <form method="POST">
-  <label>Mail
-    <input name="mail" required/>
-  </label>
+  {{ display_form(form) }}
   <input type="submit" value="Inviter"/>
 </form>
 

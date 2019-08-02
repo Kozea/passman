@@ -3,7 +3,7 @@ from flask import (
 from passlib.hash import pbkdf2_sha256
 
 from .. import app
-from ..forms import GroupForm, PasswordForm
+from ..forms import GroupForm, PasswordForm, UserForm, UserGroupForm
 from ..model import Group, Password, User
 from ..utils import (
     create_password, create_user, decrypt_password, decrypt_private_key,
@@ -169,13 +169,12 @@ def edit_user():
 
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
-    if request.method == 'POST':
-        input_mail = request.form.get('mail')
+    form = UserForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
+        input_mail = request.form.get('login')
         input_password = request.form.get('password')
 
-        if not input_mail or not input_password:
-            flash('No mail or password provided', 'error')
-            return redirect(url_for('add_user'))
         if '@' not in input_mail:
             flash('Mail malformed', 'error')
             return redirect(url_for('add_user'))
@@ -187,18 +186,17 @@ def add_user():
         g.session.commit()
         return redirect(url_for('login'))
 
-    return render_template('login_or_add_user.html.jinja2', add_user=True)
+    return render_template(
+        'login_or_add_user.html.jinja2', form=form, add_user=True)
 
 
 @app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
 def add_user_group(group_id):
     group = g.session.query(Group).get(group_id)
+    form = UserGroupForm(request.form or None)
 
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate():
         input_mail = request.form.get('mail')
-        if not input_mail:
-            flash('No mail provided', 'error')
-            return redirect(url_for('add_user_group'))
         if '@' not in input_mail:
             flash('Mail malformed', 'error')
             return redirect(url_for('add_user_group'))
@@ -214,15 +212,13 @@ def add_user_group(group_id):
                 g.session.add(
                     Password(
                         **share_to_user(
-                            password, new_user, group, session['private_key']
-                        )
-                    )
+                            password, new_user, group, session['private_key']))
                 )
             g.session.commit()
 
         return redirect(url_for('display_passwords'))
 
-    return render_template('add_user_group.html')
+    return render_template('add_user_group.html', form=form)
 
 
 @app.route('/quit_group/<int:group_id>', methods=['GET', 'POST'])
@@ -253,19 +249,22 @@ def logout():
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
-    if request.method == 'POST':
+    form = UserForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
         input_password = request.form.get('password')
         user = user_exists(request.form.get('login'), g.session.query(User))
 
         if not user or not pbkdf2_sha256.verify(input_password, user.password):
-            flash('Login or password incorrect', 'error')
+            flash('Identifiant ou mot de passe incorrect', 'error')
             return redirect(url_for('login'))
 
         session['private_key'] = decrypt_private_key(user, input_password)
         session['user_id'] = user.id
         return redirect(url_for('display_passwords'))
 
-    return render_template('login_or_add_user.html.jinja2', login=True)
+    return render_template(
+        'login_or_add_user.html.jinja2', form=form, login=True)
 
 
 @app.route('/')
