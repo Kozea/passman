@@ -1,0 +1,38 @@
+{% extends '_layout.html.jinja2' %}
+{% block content %}
+
+{% if not edit_user %}
+  <nav>
+    <ul>
+      <li>
+        <a href="{{ url_for('login') }}">Se connecter</a>
+      </li>
+      <li>
+        <a href="{{ url_for('add_user') }}">Créer un compte</a>
+      </li>
+    </ul>
+  </nav>
+{% else %}
+  <h2>Mettre à jour mon profil</h2>
+{% endif %}
+
+{% if login %}
+  <form action="{{ url_for('login') }}" method="POST">
+{% elif add_user %}
+  <form action="{{ url_for('add_user') }}" method="POST">
+{% elif edit_user %}
+  <form action="{{ url_for('edit_user') }}" method="POST">
+{% endif %}
+
+    {{ display_form(form) }}
+
+{% if login %}
+  <input type="submit" value="Se connecter"/>
+{% elif add_user %}
+  <input type="submit" value="Créer mon compte"/>
+{% elif edit_user %}
+  <input type="submit" value="Mettre à jour"/>
+{% endif %}
+</form>
+
+{% endblock %}
