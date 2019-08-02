@@ -175,9 +175,6 @@ def add_user():
         input_mail = request.form.get('login')
         input_password = request.form.get('password')
 
-        if '@' not in input_mail:
-            flash('Mail malformed', 'error')
-            return redirect(url_for('add_user'))
         if user_exists(input_mail, g.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('add_user'))
@@ -197,9 +194,6 @@ def add_user_group(group_id):
 
     if request.method == 'POST' and form.validate():
         input_mail = request.form.get('mail')
-        if '@' not in input_mail:
-            flash('Mail malformed', 'error')
-            return redirect(url_for('add_user_group'))
         new_user = user_exists(input_mail, g.session.query(User))
         if new_user:
             group.users.append(new_user)
@@ -297,5 +291,4 @@ def display_groups_passwords():
             'total_members': len(group.users),
         }
     return render_template(
-        'display_groups_passwords.html', groups_passwords=groups_passwords
-    )
+        'display_groups_passwords.html', groups_passwords=groups_passwords)
