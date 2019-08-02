@@ -27,21 +27,15 @@ def delete_password(password_id):
 
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
 def edit_password(password_id):
-    if request.method == 'POST':
+    form = PasswordForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
         password_items = {
             'label': request.form.get('label'),
             'login': request.form.get('login'),
             'password': request.form.get('password'),
             'notes': request.form.get('notes'),
         }
-
-        if not (
-            password_items['login']
-            or not password_items['password']
-            or not password_items['label']
-        ):
-            flash('Label, login and password are all required', 'error')
-            return redirect(url_for('edit_password', password_id=password_id))
 
         password = g.session.query(Password).get(password_id)
         update_password(password, password_items)
@@ -50,7 +44,9 @@ def edit_password(password_id):
 
     encrypted_password = g.session.query(Password).get(password_id)
     password = decrypt_password(encrypted_password, session['private_key'])
-    return render_template('edit_password.html', password=password)
+    for attribute in ('label', 'login', 'password', 'notes'):
+        setattr(getattr(form, attribute), 'data', password[attribute])
+    return render_template('password.html.jinja2', form=form)
 
 
 @app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
@@ -149,7 +145,9 @@ def delete_user():
 
 @app.route('/edit_user', methods=['GET', 'POST'])
 def edit_user():
-    if request.method == 'POST':
+    form = UserForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
         if user_exists(request.form['mail'], g.session.query(User)):
             flash('Mail already used', 'error')
             return redirect(url_for('edit_user'))
@@ -164,7 +162,8 @@ def edit_user():
         g.session.commit()
         return redirect(url_for('logout'))
 
-    return render_template('edit_user.html')
+    return render_template(
+        'login_or_user.html.jinja2', form=form, edit_user=True)
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
@@ -184,7 +183,7 @@ def add_user():
         return redirect(url_for('login'))
 
     return render_template(
-        'login_or_add_user.html.jinja2', form=form, add_user=True)
+        'login_or_user.html.jinja2', form=form, add_user=True)
 
 
 @app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
@@ -257,8 +256,7 @@ def login():
         session['user_id'] = user.id
         return redirect(url_for('display_passwords'))
 
-    return render_template(
-        'login_or_add_user.html.jinja2', form=form, login=True)
+    return render_template('login_or_user.html.jinja2', form=form, login=True)
 
 
 @app.route('/')
