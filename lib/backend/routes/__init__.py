@@ -100,7 +100,7 @@ def delete_group(group_id):
         g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    return render_template('delete_group.html', group=group)
+    return render_template('delete.html.jinja2', group=group)
 
 
 @app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
@@ -140,7 +140,7 @@ def delete_user():
         g.session.commit()
         return redirect(url_for('logout'))
 
-    return render_template('delete_user.html')
+    return render_template('delete.html.jinja2', user=True)
 
 
 @app.route('/edit_user', methods=['GET', 'POST'])
