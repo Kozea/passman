@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, g, session
+from flask_alcool import Alcool
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -15,6 +16,7 @@ locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 app = Flask(__name__)
 app.config.from_envvar('FLASK_CONFIG')
+Alcool(app)
 
 
 def drop_db():

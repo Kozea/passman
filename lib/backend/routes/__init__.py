@@ -1,16 +1,19 @@
 from flask import (
     abort, flash, g, redirect, render_template, request, session, url_for)
+from flask_alcool import allow_if
 from passlib.hash import pbkdf2_sha256
 
 from .. import app
-from ..forms import GroupForm, PasswordForm, UserForm, UserGroupForm
 from ..model import Group, Password, User
-from ..utils import (
+from ..utils import acl as Is
+from ..utils.forms import GroupForm, PasswordForm, UserForm, UserGroupForm
+from ..utils.utils import (
     create_password, create_user, decrypt_password, decrypt_private_key,
     share_to_group, share_to_user, update_password, update_user, user_exists)
 
 
 @app.route('/delete_password/<int:password_id>', methods=['POST'])
+@allow_if(Is.connected)
 def delete_password(password_id):
     password = g.session.query(Password).get(password_id)
     user = g.session.query(User).get(session['user_id'])
@@ -26,6 +29,7 @@ def delete_password(password_id):
 
 
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def edit_password(password_id):
     form = PasswordForm(request.form or None)
 
@@ -50,6 +54,7 @@ def edit_password(password_id):
 
 
 @app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def share_password_group(password_id):
     if request.method == 'POST':
         if request.form:
@@ -69,6 +74,7 @@ def share_password_group(password_id):
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def add_password():
     form = PasswordForm(request.form or None)
 
@@ -89,6 +95,7 @@ def add_password():
 
 
 @app.route('/delete_group/<int:group_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def delete_group(group_id):
     group = g.session.query(Group).get(group_id)
     if (not group or
@@ -104,6 +111,7 @@ def delete_group(group_id):
 
 
 @app.route('/edit_group/<int:group_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def edit_group(group_id):
     group = g.session.query(Group).get(group_id)
     if group is None:
@@ -119,6 +127,7 @@ def edit_group(group_id):
 
 
 @app.route('/add_group', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def add_group():
     form = GroupForm(request.form or None)
 
@@ -134,6 +143,7 @@ def add_group():
 
 
 @app.route('/delete_user', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def delete_user():
     if request.method == 'POST':
         g.session.delete(g.session.query(User).get(session['user_id']))
@@ -144,6 +154,7 @@ def delete_user():
 
 
 @app.route('/edit_user', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def edit_user():
     form = UserForm(request.form or None)
 
@@ -167,6 +178,7 @@ def edit_user():
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def add_user():
     form = UserForm(request.form or None)
 
@@ -187,6 +199,7 @@ def add_user():
 
 
 @app.route('/add_user_group/<int:group_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def add_user_group(group_id):
     group = g.session.query(Group).get(group_id)
     form = UserGroupForm(request.form or None)
@@ -215,6 +228,7 @@ def add_user_group(group_id):
 
 
 @app.route('/quit_group/<int:group_id>', methods=['GET', 'POST'])
+@allow_if(Is.connected)
 def quit_group(group_id):
     group = g.session.query(Group).get(group_id)
 
@@ -261,7 +275,7 @@ def login():
 
 @app.route('/')
 def display_passwords():
-    if session.get('user_id'):
+    if g.context['user']:
         passwords = g.session.query(User).get(session['user_id']).passwords
         decrypted_passwords = {
             password.id: decrypt_password(password, session['private_key'])
@@ -275,6 +289,7 @@ def display_passwords():
 
 
 @app.route('/display_groups_passwords')
+@allow_if(Is.connected)
 def display_groups_passwords():
     user = g.session.query(User).get(session['user_id'])
     groups_passwords = {}

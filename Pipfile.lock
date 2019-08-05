@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d2ef07f8aafabe7fa4850c91fe7fc2ea139b4cdbc93156800ba1a56d06fd4b85"
+            "sha256": "4e1a0a3a40663f418cead6e81a9ed44a4ce10a6a6502b0460acf6ae08619545e"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -36,6 +36,13 @@
             "index": "pypi",
             "version": "==1.1.1"
         },
+        "flask-alcool": {
+            "hashes": [
+                "sha256:a1276061e313d34ecec1fdb58dbe813e2afb42548cc7eeeaffcaee6e64514d2a"
+            ],
+            "index": "pypi",
+            "version": "==0.4"
+        },
         "itsdangerous": {
             "hashes": [
                 "sha256:321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19",
@@ -52,9 +59,9 @@
         },
         "mako": {
             "hashes": [
-                "sha256:f5a642d8c5699269ab62a68b296ff990767eb120f51e2e8f3d6afb16bdb57f4b"
+                "sha256:a36919599a9b7dc5d86a7a8988f23a9a3a3d083070023bab23d64f7f1d1e0a4b"
             ],
-            "version": "==1.0.14"
+            "version": "==1.1.0"
         },
         "markupsafe": {
             "hashes": [
