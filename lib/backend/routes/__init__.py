@@ -12,20 +12,24 @@ from ..utils.utils import (
     share_to_group, share_to_user, update_password, update_user, user_exists)
 
 
-@app.route('/delete_password/<int:password_id>', methods=['POST'])
+@app.route('/delete_password/<int:password_id>', methods=['GET', 'POST'])
 @allow_if(Is.connected)
 def delete_password(password_id):
     password = g.session.query(Password).get(password_id)
     user = g.session.query(User).get(session['user_id'])
 
-    if not password or password not in user.passwords:
-        flash('Can\'t do that', 'error')
+    if request.method == 'POST':
+        if not password or password not in user.passwords:
+            flash('Can\'t do that', 'error')
+            return redirect(url_for('display_passwords'))
+
+        for password in password.family:
+            g.session.delete(password)
+        g.session.commit()
+
         return redirect(url_for('display_passwords'))
 
-    for password in password.family:
-        g.session.delete(password)
-    g.session.commit()
-    return redirect(url_for('display_passwords'))
+    return render_template('delete.html.jinja2', password=password)
 
 
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
