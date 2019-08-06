@@ -91,7 +91,16 @@ def add_password():
         }
 
         user = g.session.query(User).get(session['user_id'])
-        g.session.add(Password(**create_password(user, password_items)))
+        password = Password(**create_password(user, password_items))
+        g.session.add(password)
+
+        group = g.session.query(Group).get(request.form.get('group_id'))
+        if group:
+            password_to_add = share_to_group(
+                password, group, user, session['private_key'])
+            for password in password_to_add:
+                g.session.add(Password(**password))
+
         g.session.commit()
         return redirect(url_for('display_passwords'))
 
@@ -102,8 +111,9 @@ def add_password():
 @allow_if(Is.connected)
 def delete_group(group_id):
     group = g.session.query(Group).get(group_id)
-    if (not group or
-            g.session.query(User).get(session['user_id']) not in group.users):
+    if (not group
+            or g.session.query(User).get(session['user_id'])
+            not in group.users):
         return abort(404)
 
     if request.method == 'POST':
