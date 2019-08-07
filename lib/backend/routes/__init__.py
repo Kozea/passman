@@ -7,7 +7,8 @@ from .. import app
 from ..model import Group, Password, User
 from ..utils import acl as Is
 from ..utils.forms import (
-    GroupForm, PasswordForm, SharePasswordForm, UserForm, UserGroupForm)
+    EditUserForm, GroupForm, PasswordForm, SharePasswordForm, UserForm,
+    UserGroupForm)
 from ..utils.utils import (
     create_password, create_user, decrypt_password, decrypt_private_key,
     share_to_group, share_to_user, update_password, update_user, user_exists)
@@ -96,8 +97,8 @@ def add_password():
         password = Password(**create_password(user, password_items))
         g.session.add(password)
 
-        group = g.session.query(Group).get(request.form.get('group_id'))
-        if group:
+        if request.form.get('group_id'):
+            group = g.session.query(Group).get(request.form.get('group_id'))
             password_to_add = share_to_group(
                 password, group, user, session['private_key'])
             for password in password_to_add:
@@ -172,15 +173,16 @@ def delete_user():
 @app.route('/edit_user', methods=['GET', 'POST'])
 @allow_if(Is.connected)
 def edit_user():
-    form = UserForm(request.form or None)
+    form = EditUserForm(request.form or None)
 
     if request.method == 'POST' and form.validate():
-        if user_exists(request.form['mail'], g.session.query(User)):
-            flash('Mail already used', 'error')
+        if (request.form.get('login') and
+                user_exists(request.form.get('login'), g.session.query(User))):
+            flash('Mail déjà utilisé', 'error')
             return redirect(url_for('edit_user'))
 
-        mail = request.form['mail']
-        password = request.form['password']
+        mail = request.form.get('login')
+        password = request.form.get('password')
         user = g.session.query(User).get(session['user_id'])
         if password:
             update_user(user, mail, password, session['private_key'])
@@ -202,7 +204,7 @@ def add_user():
         input_password = request.form.get('password')
 
         if user_exists(input_mail, g.session.query(User)):
-            flash('Mail already used', 'error')
+            flash('Mail déjà utilisé', 'error')
             return redirect(url_for('add_user'))
 
         g.session.add(User(**create_user(input_mail, input_password)))
