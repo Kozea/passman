@@ -12,6 +12,11 @@ def mail_validator(form, field):
         raise ValidationError('Mail invalide')
 
 
+class EditUserForm(Form):
+    login = StringField('Identifiant')
+    password = PasswordField('Mot de passe')
+
+
 class GroupForm(Form):
     label = StringField('Nom', [DataRequired()])
 
