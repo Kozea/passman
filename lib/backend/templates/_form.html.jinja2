@@ -1,7 +1,7 @@
-{% macro display_field(field, readonly=False) %}
+{% macro display_field(field) %}
   <label class="{{ 'required' if field.flags.required }} {{ 'error' if field.errors }}">
     {{ field.label.text }}
-    {{ field(readonly=True, onclick='return false;') if readonly else field }}
+    {{ field }}
     {% for error in field.errors %}
       <span class="error">{{ error }}</span>
     {% endfor %}

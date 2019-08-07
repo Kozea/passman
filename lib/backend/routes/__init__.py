@@ -6,7 +6,8 @@ from passlib.hash import pbkdf2_sha256
 from .. import app
 from ..model import Group, Password, User
 from ..utils import acl as Is
-from ..utils.forms import GroupForm, PasswordForm, UserForm, UserGroupForm
+from ..utils.forms import (
+    GroupForm, PasswordForm, SharePasswordForm, UserForm, UserGroupForm)
 from ..utils.utils import (
     create_password, create_user, decrypt_password, decrypt_private_key,
     share_to_group, share_to_user, update_password, update_user, user_exists)
@@ -60,21 +61,22 @@ def edit_password(password_id):
 @app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
 @allow_if(Is.connected)
 def share_password_group(password_id):
-    if request.method == 'POST':
-        if request.form:
-            current_user = g.session.query(User).get(session['user_id'])
-            password = g.session.query(Password).get(password_id)
-            group = g.session.query(Group).get(request.form.get('group'))
+    form = SharePasswordForm(request.form or None)
+
+    if request.method == 'POST' and form.validate():
+        current_user = g.session.query(User).get(session['user_id'])
+        password_to_share = g.session.query(Password).get(password_id)
+        for group_id in form.group_ids.data:
+            group = g.session.query(Group).get(group_id)
             passwords_to_add = share_to_group(
-                password, group, current_user, session['private_key']
+                password_to_share, group, current_user, session['private_key']
             )
             for password in passwords_to_add:
                 g.session.add(Password(**password))
-            g.session.commit()
+        g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    groups = g.session.query(User).get(session['user_id']).groups
-    return render_template('share_password_group.html', groups=groups)
+    return render_template('share_password_group.html', form=form)
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
@@ -192,7 +194,6 @@ def edit_user():
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
-@allow_if(Is.connected)
 def add_user():
     form = UserForm(request.form or None)
 
