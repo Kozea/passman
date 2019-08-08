@@ -21,6 +21,11 @@ def test_login_logout(http, db_session):
 
 
 def test_display_passwords(http, db_session):
+    response = http.get('/', follow_redirects=True)
+    assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert '<form' in page_data
+
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
     assert response.status_code == 200
@@ -30,6 +35,9 @@ def test_display_passwords(http, db_session):
 
 
 def test_display_groups(http, db_session):
+    response = http.get('/display_groups_passwords')
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/display_groups_passwords')
     assert response.status_code == 200
@@ -38,10 +46,20 @@ def test_display_groups(http, db_session):
 
 
 def test_delete_password(http, db_session):
+    response = http.get('/delete_password/1')
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
     page_data = response.data.decode('utf-8')
     assert 'one super password' in page_data
+
+    response = http.get('/delete_password/1')
+    assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert '<form' in page_data
+    assert 'Supprimer' in page_data
+
     response = http.post('/delete_password/1')
     page_data = response.data.decode('utf-8')
     assert 'one super password' not in page_data
@@ -55,6 +73,12 @@ def test_edit_password(http, db_session):
         'notes': 'super notes'
     }
 
+    response = http.get('/edit_password/1')
+    assert response.status_code == 403
+    response = http.post(
+        '/edit_password/1', data=data_password, follow_redirects=True)
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
     page_data = response.data.decode('utf-8')
@@ -64,19 +88,32 @@ def test_edit_password(http, db_session):
     assert response.status_code == 200
     response = http.post(
         '/edit_password/1', data=data_password, follow_redirects=True)
+    assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'new label' in page_data
     assert 'super notes' in page_data
 
 
 def test_share_password_group(http, db_session):
+    response = http.get('/share_password_group/1', follow_redirects=True)
+    assert response.status_code == 403
+    response = http.post('/share_password_group/1', data={'group_ids': 1})
+    assert response.status_code == 403
+
     login(http, 'test2')
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'one super password' not in page_data
 
     login(http, 'test')
-    http.post('/share_password_group/1', data={'group_ids': 1})
+    response = http.get('/share_password_group/1', follow_redirects=True)
+    assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert 'Partager' in page_data
+    response = http.post(
+        '/share_password_group/1', data={'group_ids': 1},
+        follow_redirects=True)
+    assert response.status_code == 200
 
     login(http, 'test2')
     response = http.get('/display_groups_passwords')
@@ -91,6 +128,11 @@ def test_add_password(http, db_session):
         'password': 'password',
         'notes': 'blabla'
     }
+    response = http.get('/add_password')
+    assert response.status_code == 403
+    response = http.post(
+        '/add_password', data=data_password, follow_redirects=True)
+    assert response.status_code == 403
 
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
@@ -100,55 +142,90 @@ def test_add_password(http, db_session):
     assert response.status_code == 200
     response = http.post(
         '/add_password', data=data_password, follow_redirects=True)
+    assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'new password' in page_data
     assert 'blabla' in page_data
 
 
 def test_delete_group(http, db_session):
+    response = http.get('/delete_group/1', follow_redirects=True)
+    assert response.status_code == 403
+    response = http.post('/delete_group/1', follow_redirects=True)
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'group label' in page_data
     response = http.get('/delete_group/1')
     assert response.status_code == 200
-    http.post('/delete_group/1')
+    page_data = response.data.decode('utf-8')
+    assert 'Supprimer' in page_data
+    response = http.post('/delete_group/1', follow_redirects=True)
+    assert response.status_code == 200
     response = http.get('/display_groups_passwords')
+    assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'group label' not in page_data
 
 
 def test_edit_group(http, db_session):
+    response = http.get('/edit_group/1')
+    assert response.status_code == 403
+    response = http.post('/edit_group/1', data={'label': 'super group label'})
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'group label' in page_data
     response = http.get('/edit_group/1')
     assert response.status_code == 200
-    http.post('/edit_group/1', data={'label': 'super group label'})
+    page_data = response.data.decode('utf-8')
+    assert 'Mettre à jour' in page_data
+    response = http.post(
+        '/edit_group/1', data={'label': 'super group label'},
+        follow_redirects=True)
+    assert response.status_code == 200
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'super group label' in page_data
 
 
 def test_add_group(http, db_session):
+    response = http.get('/add_group')
+    assert response.status_code == 403
+    response = http.post('/add_group', data={'label': 'toto'})
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'toto' not in page_data
     response = http.get('/add_group')
     assert response.status_code == 200
-    http.post('/add_group', data={'label': 'toto'})
+    response = http.post(
+        '/add_group', data={'label': 'toto'}, follow_redirects=True)
+    assert response.status_code == 200
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'toto' in page_data
 
 
 def test_delete_user(http, db_session):
+    response = http.get('/delete_user')
+    assert response.status_code == 403
+    response = http.post('/delete_user', follow_redirects=True)
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/delete_user')
     assert response.status_code == 200
-    http.post('/delete_user', follow_redirects=True)
+    page_data = response.data.decode('utf-8')
+    assert 'Supprimer mon compte' in page_data
+    response = http.post('/delete_user', follow_redirects=True)
+    assert response.status_code == 200
 
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
@@ -157,13 +234,20 @@ def test_delete_user(http, db_session):
 
 
 def test_edit_user(http, db_session):
+    response = http.get('/edit_user')
+    assert response.status_code == 403
+    response = http.post(
+        '/edit_user', data={'password': 'test3'}, follow_redirects=True)
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/edit_user')
     assert response.status_code == 200
-    http.post(
-        '/edit_user',
-        data={'password': 'test3'},
-    )
+    page_data = response.data.decode('utf-8')
+    assert 'Mettre à jour mon profil' in page_data
+    response = http.post(
+        '/edit_user', data={'password': 'test3'}, follow_redirects=True)
+    assert response.status_code == 200
 
     logout(http)
 
@@ -189,7 +273,8 @@ def test_add_user(http, db_session):
     assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert '<form' in page_data
-    http.post('/add_user', data=data)
+    response = http.post('/add_user', data=data, follow_redirects=True)
+    assert response.status_code == 200
 
     login(http, 'test3')
     response = http.get('/', follow_redirects=True)
@@ -228,27 +313,43 @@ def test_add_user_group(http, db_session):
 
     http.post('/add_user', data=data)
 
+    response = http.get('/add_user_group/1')
+    assert response.status_code == 403
+    response = http.post(
+        '/add_user_group/1', data={'mail': 'test3@example.com'})
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/add_user_group/1')
     assert response.status_code == 200
-    http.post('/add_user_group/1', data={'mail': 'test3@example.com'})
-    http.post('/share_password_group/1', data={'group_ids': 1})
+    response = http.post(
+        '/add_user_group/1', data={'mail': 'test3@example.com'},
+        follow_redirects=True)
+    assert response.status_code == 200
 
     login(http, 'test3')
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'group label' in page_data
-    assert 'one super password' in page_data
 
 
 def test_quit_group(http, db_session):
+    response = http.get('/quit_group/1')
+    assert response.status_code == 403
+    response = http.post('/quit_group/1')
+    assert response.status_code == 403
+
     login(http, 'test')
     response = http.get('/display_groups_passwords')
+    assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'group label' in page_data
     response = http.get('/quit_group/1')
     assert response.status_code == 200
-    http.post('/quit_group/1')
+    page_data = response.data.decode('utf-8')
+    assert 'Quitter' in page_data
+    response = http.post('/quit_group/1', follow_redirects=True)
+    assert response.status_code == 200
     response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'group label' not in page_data
