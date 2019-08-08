@@ -131,7 +131,9 @@ def delete_group(group_id):
 @allow_if(Is.connected)
 def edit_group(group_id):
     group = g.session.query(Group).get(group_id)
-    if group is None:
+    if (not group
+            or g.session.query(User).get(session['user_id'])
+            not in group.users):
         return abort(404)
 
     form = GroupForm(request.form or None, obj=group)
