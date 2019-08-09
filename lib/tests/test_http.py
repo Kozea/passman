@@ -1,5 +1,5 @@
-from .utils import login, logout
 from ..backend.model import Password
+from .utils import login, logout
 
 
 def test_login_logout(http):

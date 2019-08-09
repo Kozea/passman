@@ -23,9 +23,9 @@ def delete_password_from_group(password_id, group_id):
     group = g.session.query(Group).get(group_id)
     user = g.session.query(User).get(session['user_id'])
 
-    if (not password or
-            (password not in user.passwords) or
-            (group not in user.groups)):
+    if (not password
+            or (password not in user.passwords)
+            or(group not in user.groups)):
         return abort(404)
 
     if request.method == 'POST':
@@ -203,8 +203,9 @@ def edit_user():
     form = EditUserForm(request.form or None)
 
     if request.method == 'POST' and form.validate():
-        if (request.form.get('login') and
-                user_exists(request.form.get('login'), g.session.query(User))):
+        if (request.form.get('login')
+                and user_exists(
+                    request.form.get('login'), g.session.query(User))):
             flash('Ce mail est déjà utilisé', 'error')
             return redirect(url_for('edit_user'))
 
