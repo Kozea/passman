@@ -8,7 +8,7 @@ def login(http, login, password='test'):
         'test3': 'test3@example.com'
     }
     data = {
-        'login': ids[login],
+        'login': ids.get(login) or login,
         'password': password
     }
     logout(http)
