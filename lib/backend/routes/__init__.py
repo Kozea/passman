@@ -20,11 +20,10 @@ def delete_password(password_id):
     password = g.session.query(Password).get(password_id)
     user = g.session.query(User).get(session['user_id'])
 
-    if request.method == 'POST':
-        if not password or password not in user.passwords:
-            flash('Can\'t do that', 'error')
-            return redirect(url_for('display_passwords'))
+    if not password or (password not in user.passwords):
+        return abort(404)
 
+    if request.method == 'POST':
         for password in password.family:
             g.session.delete(password)
         g.session.commit()
@@ -74,7 +73,7 @@ def share_password_group(password_id):
             )
             for password in passwords_to_add:
                 g.session.add(Password(**password))
-        g.session.commit()
+            g.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('share_password_group.html', form=form)
@@ -180,7 +179,7 @@ def edit_user():
     if request.method == 'POST' and form.validate():
         if (request.form.get('login') and
                 user_exists(request.form.get('login'), g.session.query(User))):
-            flash('Mail déjà utilisé', 'error')
+            flash('Ce mail est déjà utilisé', 'error')
             return redirect(url_for('edit_user'))
 
         mail = request.form.get('login')
@@ -206,7 +205,7 @@ def add_user():
         input_password = request.form.get('password')
 
         if user_exists(input_mail, g.session.query(User)):
-            flash('Mail déjà utilisé', 'error')
+            flash('Ce mail est déjà utilisé', 'error')
             return redirect(url_for('add_user'))
 
         g.session.add(User(**create_user(input_mail, input_password)))
