@@ -14,6 +14,32 @@ from ..utils.utils import (
     share_to_group, share_to_user, update_password, update_user, user_exists)
 
 
+@app.route(
+    '/delete_password_from_group/<int:password_id>/<int:group_id>',
+    methods=['GET', 'POST'])
+@allow_if(Is.connected)
+def delete_password_from_group(password_id, group_id):
+    password = g.session.query(Password).get(password_id)
+    group = g.session.query(Group).get(group_id)
+    user = g.session.query(User).get(session['user_id'])
+
+    if (not password or
+            (password not in user.passwords) or
+            (group not in user.groups)):
+        return abort(404)
+
+    if request.method == 'POST':
+        password.groups.remove(group)
+        if not password.groups:
+            g.session.delete(password)
+        g.session.commit()
+
+        return redirect(url_for('display_groups_passwords'))
+
+    return render_template(
+        'delete.html.jinja2', password=password, group=group)
+
+
 @app.route('/delete_password/<int:password_id>', methods=['GET', 'POST'])
 @allow_if(Is.connected)
 def delete_password(password_id):
