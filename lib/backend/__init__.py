@@ -1,5 +1,4 @@
 import locale
-import logging
 import os
 import sqlite3
 from pathlib import Path
@@ -53,20 +52,5 @@ def after_request(response):
     g.session.close()
     return response
 
-
-if app.debug:
-    level = (
-        logging.INFO
-        if os.getenv('PYTHON_VERBOSE', os.getenv('VERBOSE'))
-        else logging.WARNING
-    )
-    app.logger.setLevel(level)
-    logging.getLogger('sqlalchemy').setLevel(level)
-    logging.getLogger('sqlalchemy').handlers = logging.getLogger(
-        'werkzeug'
-    ).handlers
-    logging.getLogger('sqlalchemy.orm').setLevel(logging.WARNING)
-    if level == logging.WARNING:
-        logging.getLogger('werkzeug').setLevel(level)
 
 from .routes import *  # noqa isort:skip
