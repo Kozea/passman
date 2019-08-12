@@ -18,6 +18,18 @@ app.config.from_envvar('FLASK_CONFIG')
 Alcool(app)
 
 
+if app.config.get('DEBUG'):  # pragma: no cover
+    from sassutils.wsgi import SassMiddleware
+    app.wsgi_app = SassMiddleware(app.wsgi_app, {
+        'lib.backend': {
+            'sass_path': 'static/sass',
+            'css_path': 'static/css',
+            'wsgi_path': '/static/css',
+            'strip_extension': True,
+        }
+    })
+
+
 def drop_db():
     filename = urlparse(app.config['DB']).path
     if os.path.isfile(filename):
