@@ -1,7 +1,7 @@
 {%- from '_form.html.jinja2' import display_form, display_field -%}
 
 <!DOCTYPE html>
-<html>
+<html id="page-{{ request.endpoint.replace('_', '-') if request.endpoint else 'error' }}">
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
