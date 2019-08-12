@@ -12,25 +12,25 @@
     <header>
       {% if g.context.user %}
         <ul>
-            <li>
-              <a href="{{ url_for('display_passwords') }}">Mes notes</a>
-            </li>
-            <li>
-              <a href="{{ url_for('display_groups_passwords') }}">Groupes</a>
-            </li>
+          <li>
+            <a href="{{ url_for('display_passwords') }}">Mes notes</a>
+          </li>
+          <li>
+            <a href="{{ url_for('display_groups_passwords') }}">Groupes</a>
+          </li>
         </ul>
         <ul>
-            <ul>
-              <li>
-                <a href="{{ url_for('edit_user') }}">Mettre à jour mon profil</a>
-              </li>
-              <li>
-                <a href="{{ url_for('delete_user') }}">Supprimer mon compte</a>
-              </li>
-            </ul>
+          <ul>
             <li>
-              <a href="{{ url_for('logout') }}">Me déconnecter</a>
+              <a href="{{ url_for('edit_user') }}">Mettre à jour mon profil</a>
             </li>
+            <li>
+              <a href="{{ url_for('delete_user') }}">Supprimer mon compte</a>
+            </li>
+          </ul>
+          <li>
+            <a href="{{ url_for('logout') }}">Me déconnecter</a>
+          </li>
         </ul>
       {% else %}
         <ul></ul>
