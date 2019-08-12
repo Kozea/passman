@@ -13,10 +13,10 @@
       {% if g.context.user %}
         <ul>
             <li>
-              <a href="{{ url_for('display_passwords') }}">mes notes</a>
+              <a href="{{ url_for('display_passwords') }}">Mes notes</a>
             </li>
             <li>
-              <a href="{{ url_for('display_groups_passwords') }}">groupes</a>
+              <a href="{{ url_for('display_groups_passwords') }}">Groupes</a>
             </li>
         </ul>
         <ul>
@@ -29,7 +29,7 @@
               </li>
             </ul>
             <li>
-              <a href="{{ url_for('logout') }}">me déconnecter</a>
+              <a href="{{ url_for('logout') }}">Me déconnecter</a>
             </li>
         </ul>
       {% else %}
