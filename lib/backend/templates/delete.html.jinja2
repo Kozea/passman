@@ -1,23 +1,22 @@
 {% extends '_layout.html.jinja2' %}
+
 {% block content %}
-
-{% if user %}
-  <form action="{{ url_for('delete_user') }}" method="POST">
-    Votre compte va être supprimé.
-    <input type="submit" value="Supprimer mon compte"/>
-{% elif group and password %}
-  <form action="{{ url_for('delete_password_from_group', password_id=password.id, group_id=group.id) }}" method="POST">
-    La note va être supprimée.
-    <input type="submit" value="Supprimer"/>
-{% elif group %}
-  <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST">
-    Le groupe va être supprimé.
-    <input type="submit" value="Supprimer"/>
-{% elif password %}
-  <form action="{{ url_for('delete_password', password_id=password.id) }}" method="POST">
-    La note va être supprimée.
-    <input type="submit" value="Supprimer"/>
-{% endif %}
-</form>
-
+  <article>
+    {% if group and password %}
+      <h2>Supprimer la note du groupe</h2>
+      <form action="{{ url_for('delete_password_from_group', password_id=password.id, group_id=group.id) }}" method="POST">
+        <p>La note va être supprimée.</p>
+        <input type="submit" value="Supprimer"/>
+    {% elif group %}
+      <h2>Supprimer le groupe</h2>
+      <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST">
+        <p>Le groupe va être supprimé.</p>
+        <input type="submit" value="Supprimer"/>
+    {% elif password %}
+      <h2>Supprimer la note</h2>
+      <form action="{{ url_for('delete_password', password_id=password.id) }}" method="POST">
+        <p>La note va être supprimée.</p>
+        <input type="submit" value="Supprimer"/>
+    {% endif %}
+  </form>
 {% endblock %}

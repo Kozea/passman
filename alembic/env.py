@@ -7,8 +7,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib'))
-from backend import app, model  # noqa isort:skip
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from lib.backend import app, model  # noqa isort:skip
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

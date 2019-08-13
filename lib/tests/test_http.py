@@ -85,7 +85,8 @@ def test_delete_password_from_group(http, db_session):
     assert response.status_code == 403
 
     login(http, 'test')
-    http.post('/share_password_group/1', data={'group_ids': [1, 2]})
+    http.post(
+        '/share_password_group/1', data={'group_1': True, 'group_2': True})
     response = http.get('/display_groups_passwords', follow_redirects=True)
     page_data = response.data.decode('utf-8')
     assert page_data.count('one super password') == 2
@@ -153,7 +154,7 @@ def test_edit_password(http):
 def test_share_password_group(http):
     response = http.get('/share_password_group/1', follow_redirects=True)
     assert response.status_code == 403
-    response = http.post('/share_password_group/1', data={'group_ids': 1})
+    response = http.post('/share_password_group/1', data={'group_1': True})
     assert response.status_code == 403
 
     login(http, 'test2')
@@ -167,7 +168,7 @@ def test_share_password_group(http):
     page_data = response.data.decode('utf-8')
     assert 'Partager' in page_data
     response = http.post(
-        '/share_password_group/1', data={'group_ids': [1, 2]},
+        '/share_password_group/1', data={'group_1': True, 'group_2': True},
         follow_redirects=True)
     assert response.status_code == 200
 
@@ -316,18 +317,24 @@ def test_add_group(http):
 
 
 def test_delete_user(http):
-    response = http.get('/delete_user')
-    assert response.status_code == 403
     response = http.post('/delete_user', follow_redirects=True)
     assert response.status_code == 403
 
     login(http, 'test')
-    response = http.get('/delete_user')
+    response = http.get('/edit_user')
     assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'Supprimer mon compte' in page_data
     response = http.post('/delete_user', follow_redirects=True)
     assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert 'Vous devez confirmer la suppression' in page_data
+
+    response = http.post(
+        '/delete_user', data={'confirm': True}, follow_redirects=True)
+    assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert 'Vous devez confirmer la suppression' not in page_data
 
     login(http, 'test')
     response = http.get('/', follow_redirects=True)
@@ -440,7 +447,7 @@ def test_add_user_group(http):
     assert response.status_code == 403
 
     login(http, 'test')
-    http.post('/share_password_group/1', data={'group_ids': 1})
+    http.post('/share_password_group/1', data={'group_1': True})
     response = http.get('/add_user_group/1')
     assert response.status_code == 200
 
@@ -470,7 +477,7 @@ def test_quit_group(http):
     assert response.status_code == 403
 
     login(http, 'test')
-    http.post('/share_password_group/1', data={'group_ids': 1})
+    http.post('/share_password_group/1', data={'group_1': True})
     response = http.get('/display_groups_passwords')
     assert response.status_code == 200
     page_data = response.data.decode('utf-8')

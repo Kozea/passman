@@ -1,8 +1,7 @@
 from flask import g, session
 from wtforms import (
-    Form, PasswordField, SelectField, SelectMultipleField, StringField)
+    BooleanField, Form, PasswordField, SelectField, StringField)
 from wtforms.validators import DataRequired, Optional, ValidationError
-from wtforms.widgets import CheckboxInput, ListWidget
 
 from ..model import Group, User
 
@@ -44,23 +43,16 @@ class PasswordForm(Form):
         coerce=lambda value: int(value) if value else None)
 
 
-class SharePasswordForm(Form):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        group_ids = [
-            group.id
-            for group in g.session.query(User).get(session['user_id']).groups]
-        groups = (
-            g.session.query(
-                Group.id, Group.label)
-            .filter(Group.id.in_(group_ids))
-            .all())
-        self.group_ids.choices = [(group.id, group.label) for group in groups]
+def SharePasswordForm(*args, **kwargs):
+    class SharePasswordRealForm(Form):
+        pass
 
-    group_ids = SelectMultipleField(
-        'Groupes', [Optional()],
-        option_widget=CheckboxInput(), widget=ListWidget(prefix_label=False),
-        coerce=lambda value: int(value) if value else None)
+    for group in g.session.query(User).get(session['user_id']).groups:
+        setattr(
+            SharePasswordRealForm, f'group_{group.id}',
+            BooleanField(group.label, [Optional()]))
+
+    return SharePasswordRealForm(*args, **kwargs)
 
 
 class UserForm(Form):

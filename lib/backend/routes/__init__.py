@@ -25,7 +25,7 @@ def delete_password_from_group(password_id, group_id):
 
     if (not password
             or (password not in user.passwords)
-            or(group not in user.groups)):
+            or (group not in user.groups)):
         return abort(404)
 
     if request.method == 'POST':
@@ -63,15 +63,13 @@ def delete_password(password_id):
 @allow_if(Is.connected)
 def edit_password(password_id):
     form = PasswordForm(request.form or None)
+    attributes = ('label', 'login', 'password', 'notes')
 
     if request.method == 'POST' and form.validate():
         password_items = {
-            'label': request.form.get('label'),
-            'login': request.form.get('login'),
-            'password': request.form.get('password'),
-            'notes': request.form.get('notes'),
+            attribute: request.form.get(attribute)
+            for attribute in attributes
         }
-
         password = g.session.query(Password).get(password_id)
         update_password(password, password_items)
         g.session.commit()
@@ -79,7 +77,7 @@ def edit_password(password_id):
 
     encrypted_password = g.session.query(Password).get(password_id)
     password = decrypt_password(encrypted_password, session['private_key'])
-    for attribute in ('label', 'login', 'password', 'notes'):
+    for attribute in attributes:
         setattr(getattr(form, attribute), 'data', password[attribute])
     return render_template('password.html.jinja2', form=form)
 
@@ -92,32 +90,31 @@ def share_password_group(password_id):
     if request.method == 'POST' and form.validate():
         current_user = g.session.query(User).get(session['user_id'])
         password_to_share = g.session.query(Password).get(password_id)
-        for group_id in form.group_ids.data:
-            group = g.session.query(Group).get(group_id)
-            passwords_to_add = share_to_group(
-                password_to_share, group, current_user, session['private_key']
-            )
-            for password in passwords_to_add:
-                g.session.add(Password(**password))
-            g.session.commit()
+
+        for group in g.session.query(User).get(session['user_id']).groups:
+            if getattr(form, f'group_{group.id}').data:
+                passwords_to_add = share_to_group(
+                    password_to_share, group, current_user,
+                    session['private_key'])
+                for password in passwords_to_add:
+                    g.session.add(Password(**password))
+                g.session.commit()
         return redirect(url_for('display_passwords'))
 
     return render_template('share_password_group.html', form=form)
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
+@app.route('/add_password/<int:group_id>', methods=['GET', 'POST'])
 @allow_if(Is.connected)
-def add_password():
-    form = PasswordForm(request.form or None)
+def add_password(group_id=None):
+    form = PasswordForm(request.form or None, data={'group_id': group_id})
 
     if request.method == 'POST' and form.validate():
         password_items = {
-            'label': request.form.get('label'),
-            'login': request.form.get('login'),
-            'password': request.form.get('password'),
-            'notes': request.form.get('notes'),
+            attribute: request.form.get(attribute)
+            for attribute in ('label', 'login', 'password', 'notes')
         }
-
         user = g.session.query(User).get(session['user_id'])
         password = Password(**create_password(user, password_items))
         g.session.add(password)
@@ -139,9 +136,8 @@ def add_password():
 @allow_if(Is.connected)
 def delete_group(group_id):
     group = g.session.query(Group).get(group_id)
-    if (not group
-            or g.session.query(User).get(session['user_id'])
-            not in group.users):
+    user = g.session.query(User).get(session['user_id'])
+    if not group or (user not in group.users):
         return abort(404)
 
     if request.method == 'POST':
@@ -156,9 +152,8 @@ def delete_group(group_id):
 @allow_if(Is.connected)
 def edit_group(group_id):
     group = g.session.query(Group).get(group_id)
-    if (not group
-            or g.session.query(User).get(session['user_id'])
-            not in group.users):
+    user = g.session.query(User).get(session['user_id'])
+    if not group or (user not in group.users):
         return abort(404)
 
     form = GroupForm(request.form or None, obj=group)
@@ -186,15 +181,16 @@ def add_group():
     return render_template('group.html.jinja2', form=form)
 
 
-@app.route('/delete_user', methods=['GET', 'POST'])
+@app.route('/delete_user', methods=['POST'])
 @allow_if(Is.connected)
 def delete_user():
-    if request.method == 'POST':
+    if request.form.get('confirm'):
         g.session.delete(g.session.query(User).get(session['user_id']))
         g.session.commit()
         return redirect(url_for('logout'))
-
-    return render_template('delete.html.jinja2', user=True)
+    else:
+        flash('Vous devez confirmer la suppression de votre compte', 'error')
+        return redirect(url_for('edit_user'))
 
 
 @app.route('/edit_user', methods=['GET', 'POST'])
@@ -260,11 +256,9 @@ def add_user_group(group_id):
                 .filter(Password.groups.contains(group))
             )
             for password in group_passwords:
-                g.session.add(
-                    Password(
-                        **share_to_user(
-                            password, new_user, group, session['private_key']))
-                )
+                password_attributes = share_to_user(
+                    password, new_user, group, session['private_key'])
+                g.session.add(Password(**password_attributes))
             g.session.commit()
 
         return redirect(url_for('display_passwords'))
@@ -322,10 +316,10 @@ def login():
 def display_passwords():
     if g.context['user']:
         passwords = g.session.query(User).get(session['user_id']).passwords
-        decrypted_passwords = {
-            password.id: decrypt_password(password, session['private_key'])
+        decrypted_passwords = [
+            decrypt_password(password, session['private_key'])
             for password in passwords if not password.groups
-        }
+        ]
         return render_template(
             'display_passwords.html', passwords=decrypted_passwords
         )

@@ -1,9 +1,12 @@
 {% extends '_layout.html.jinja2' %}
+
 {% block content %}
+  <article>
+    <h2>Ajouter un utilisateur</h2>
 
-<form method="POST">
-  {{ display_form(form) }}
-  <input type="submit" value="Inviter"/>
-</form>
-
+    <form method="POST">
+      {{ display_form(form) }}
+      <input type="submit" value="Inviter"/>
+    </form>
+  </article>
 {% endblock %}
