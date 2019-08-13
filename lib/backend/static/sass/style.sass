@@ -5,8 +5,6 @@ $label: #c4bcff
 $highlight: #ff3669
 $text: #ffffff
 
-$menu-size: 7em
-
 
 @import url('https://fonts.googleapis.com/css?family=Work+Sans:400,600')
 
@@ -25,6 +23,10 @@ $menu-size: 7em
 
 
 html
+  --menu-size: 7em
+  @media (max-width: 900px)
+    --menu-size: 3em
+
   font-size: 400
   overflow: auto
 
@@ -32,17 +34,16 @@ body
   background: $background
   color: $text
   font-family: Work Sans
-  flex-direction: column
   margin: 0
   height: 100vh
   overflow-y: auto
 
 html:not(#page-login):not(#page-add-user) h1
-  bottom: -$menu-size
+  bottom: calc(-1 * var(--menu-size))
   color: $highlight
   font-size: 1em
   left: 0
-  line-height: $menu-size
+  line-height: var(--menu-size)
   margin: 0
   position: absolute
   text-align: center
@@ -54,6 +55,7 @@ html:not(#page-login):not(#page-add-user) h1
 
 h2
   font-size: 1.2em
+  line-height: 1em
 
 h3
   font-size: 1em
@@ -131,8 +133,9 @@ body > nav
   ul
     align-items: center
     background: $notes
-    height: $menu-size
+    height: var(--menu-size)
     justify-content: center
+    overflow: hidden
     position: absolute
     z-index: 1
 
@@ -149,14 +152,14 @@ body > nav
       bottom: 0
 
 html:not(#page-login):not(#page-add-user) main
-  padding: calc(5em + #{$menu-size}) 10em
+  padding: calc(5em + var(--menu-size)) 10em
 
   nav ul
     justify-content: center
     left: 0
     position: absolute
     right: 0
-    top: $menu-size - 1em
+    top: calc(var(--menu-size) - 1em)
     z-index: 2
 
     a
@@ -345,3 +348,38 @@ input.visible
 
       a
         padding: 0.5em
+
+
+@media (max-width: 900px)
+  html:not(#page-login):not(#page-add-user) main
+    padding: calc(2em + var(--menu-size)) var(--menu-size)
+
+    nav ul
+      justify-content: flex-end
+
+    article
+      width: 90%
+
+      ul.links a:before
+        font-size: 1.5rem
+
+      section label.visible:before
+        font-size: 1.2rem
+
+  label.visible:before
+    font-size: 1.5rem
+
+  #page-login, #page-add-user
+    h1
+      bottom: auto
+      line-height: 3em
+      right: 0
+      top: 0
+
+    main
+      margin: 0
+      padding: 0
+      height: 100vh
+
+      form
+        width: 90%

@@ -12,24 +12,27 @@
     opacity: 1; } }
 
 html {
+  --menu-size: 7em;
   font-size: 400;
   overflow: auto; }
+  @media (max-width: 900px) {
+    html {
+      --menu-size: 3em; } }
 
 body {
   background: #1f2233;
   color: #ffffff;
   font-family: Work Sans;
-  flex-direction: column;
   margin: 0;
   height: 100vh;
   overflow-y: auto; }
 
 html:not(#page-login):not(#page-add-user) h1 {
-  bottom: -7em;
+  bottom: calc(-1 * var(--menu-size));
   color: #ff3669;
   font-size: 1em;
   left: 0;
-  line-height: 7em;
+  line-height: var(--menu-size);
   margin: 0;
   position: absolute;
   text-align: center;
@@ -40,7 +43,8 @@ html:not(#page-login):not(#page-add-user) h1 {
   z-index: 2; }
 
 h2 {
-  font-size: 1.2em; }
+  font-size: 1.2em;
+  line-height: 1em; }
 
 h3 {
   font-size: 1em;
@@ -109,8 +113,9 @@ body > nav {
   body > nav ul {
     align-items: center;
     background: #2b2947;
-    height: 7em;
+    height: var(--menu-size);
     justify-content: center;
+    overflow: hidden;
     position: absolute;
     z-index: 1; }
     body > nav ul li.active a {
@@ -124,13 +129,13 @@ body > nav {
       bottom: 0; }
 
 html:not(#page-login):not(#page-add-user) main {
-  padding: calc(5em + 7em) 10em; }
+  padding: calc(5em + var(--menu-size)) 10em; }
   html:not(#page-login):not(#page-add-user) main nav ul {
     justify-content: center;
     left: 0;
     position: absolute;
     right: 0;
-    top: 6em;
+    top: calc(var(--menu-size) - 1em);
     z-index: 2; }
     html:not(#page-login):not(#page-add-user) main nav ul a {
       font-size: 0; }
@@ -286,5 +291,30 @@ input.visible {
     text-transform: uppercase; }
     #page-login main .links a, #page-add-user main .links a {
       padding: 0.5em; }
+
+@media (max-width: 900px) {
+  html:not(#page-login):not(#page-add-user) main {
+    padding: calc(2em + var(--menu-size)) var(--menu-size); }
+    html:not(#page-login):not(#page-add-user) main nav ul {
+      justify-content: flex-end; }
+    html:not(#page-login):not(#page-add-user) main article {
+      width: 90%; }
+      html:not(#page-login):not(#page-add-user) main article ul.links a:before {
+        font-size: 1.5rem; }
+      html:not(#page-login):not(#page-add-user) main article section label.visible:before {
+        font-size: 1.2rem; }
+  label.visible:before {
+    font-size: 1.5rem; }
+  #page-login h1, #page-add-user h1 {
+    bottom: auto;
+    line-height: 3em;
+    right: 0;
+    top: 0; }
+  #page-login main, #page-add-user main {
+    margin: 0;
+    padding: 0;
+    height: 100vh; }
+    #page-login main form, #page-add-user main form {
+      width: 90%; } }
 
 /*# sourceMappingURL=style.css.map */
