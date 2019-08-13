@@ -1,4 +1,290 @@
-input {
+@import url("https://fonts.googleapis.com/css?family=Work+Sans:400,600");
+@font-face {
+  font-family: Fork-Awesome;
+  src: url(https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/fonts/forkawesome-webfont.ttf); }
+
+@keyframes sweep {
+  0% {
+    margin-left: -1em;
+    opacity: 0; }
+  100% {
+    margin-left: 0;
+    opacity: 1; } }
+
+html {
+  font-size: 400;
+  overflow: auto; }
+
+body {
+  background: #1f2233;
+  color: #ffffff;
+  font-family: Work Sans;
+  flex-direction: column;
+  margin: 0;
+  height: 100vh;
+  overflow-y: auto; }
+
+html:not(#page-login):not(#page-add-user) h1 {
+  bottom: -7em;
+  color: #ff3669;
+  font-size: 1em;
+  left: 0;
+  line-height: 7em;
+  margin: 0;
+  position: absolute;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-90deg);
+  transform-origin: 0 0;
+  width: 100vh;
+  z-index: 2; }
+
+h2 {
+  font-size: 1.2em; }
+
+h3 {
+  font-size: 1em;
+  margin: 0; }
+
+a {
+  color: #ff3669;
+  outline: none; }
+
+input, select {
   display: block; }
+
+form label {
+  color: #c4bcff;
+  display: block;
+  font-variant: small-caps;
+  margin: 1em 0;
+  text-transform: lowercase; }
+
+form input, form select {
+  background: #332f55;
+  border: 0 solid transparent;
+  border-bottom-width: 1px;
+  border-radius: 0;
+  box-sizing: border-box;
+  color: #ffffff;
+  margin: 0.5em 0 1em;
+  padding: 0.5em;
+  transition: border-color 0.5s;
+  -webkit-appearance: none;
+  width: 100%; }
+  form input:active, form input:focus, form select:active, form select:focus {
+    border-color: #ff3669; }
+  form input[type=submit], form select[type=submit] {
+    background: #ff3669;
+    color: #1f2233;
+    text-transform: uppercase; }
+  form input[type=checkbox], form select[type=checkbox] {
+    border-width: 1px;
+    display: inline-block;
+    float: left;
+    height: 1em;
+    margin: 0.2em 0.5em 0 0;
+    width: 1em; }
+    form input[type=checkbox]:checked, form select[type=checkbox]:checked {
+      background: #ff3669; }
+
+aside {
+  background: #ff3669;
+  color: #1f2233;
+  position: absolute;
+  right: 3em;
+  top: 3em;
+  width: 20em;
+  z-index: 3; }
+  aside ul {
+    list-style: none;
+    margin: 0;
+    padding: 0; }
+    aside ul li {
+      margin: 1em;
+      text-align: center; }
+
+body > nav {
+  text-transform: lowercase; }
+  body > nav ul {
+    align-items: center;
+    background: #2b2947;
+    height: 7em;
+    justify-content: center;
+    position: absolute;
+    z-index: 1; }
+    body > nav ul li.active a {
+      color: #ff3669; }
+    body > nav ul a {
+      color: #ffffff;
+      display: block;
+      font-weight: 600;
+      padding: 1em; }
+    body > nav ul:last-child {
+      bottom: 0; }
+
+html:not(#page-login):not(#page-add-user) main {
+  padding: calc(5em + 7em) 10em; }
+  html:not(#page-login):not(#page-add-user) main nav ul {
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 6em;
+    z-index: 2; }
+    html:not(#page-login):not(#page-add-user) main nav ul a {
+      font-size: 0; }
+      html:not(#page-login):not(#page-add-user) main nav ul a:before {
+        background: #ff3669;
+        border-radius: 3em;
+        color: #1f2233;
+        content: '+';
+        display: block;
+        font-size: 1rem;
+        line-height: 2em;
+        margin: 0 0.5em;
+        text-align: center;
+        width: 2em; }
+  html:not(#page-login):not(#page-add-user) main dl {
+    height: 0;
+    margin: 0;
+    overflow: hidden; }
+    html:not(#page-login):not(#page-add-user) main dl dt {
+      color: #c4bcff;
+      font-variant: small-caps;
+      padding: 1em 0.25em 0.25em;
+      text-transform: lowercase; }
+    html:not(#page-login):not(#page-add-user) main dl dd {
+      background: #332f55;
+      margin-left: 0;
+      padding: 0.5em; }
+  html:not(#page-login):not(#page-add-user) main input:checked ~ dl {
+    animation: sweep 0.5s ease-in-out;
+    height: auto;
+    margin: 0 0 1em; }
+  html:not(#page-login):not(#page-add-user) main input:checked ~ section {
+    animation: sweep 0.5s ease-in-out;
+    height: auto;
+    padding: 0.5em; }
+  html:not(#page-login):not(#page-add-user) main article {
+    background: #2b2947;
+    margin: 0 auto 2em;
+    overflow: auto;
+    padding: 1em;
+    position: relative;
+    width: 50%; }
+    html:not(#page-login):not(#page-add-user) main article section {
+      height: 0;
+      overflow: hidden;
+      position: relative; }
+      html:not(#page-login):not(#page-add-user) main article section label.visible {
+        right: 0.75rem;
+        top: 0.75rem; }
+        html:not(#page-login):not(#page-add-user) main article section label.visible:before {
+          font-size: 0.75rem; }
+      html:not(#page-login):not(#page-add-user) main article section ul.links {
+        margin: 0.5em 0 0;
+        padding: 0.25em 0.5em; }
+    html:not(#page-login):not(#page-add-user) main article h2 {
+      margin: 0 2em 0 0; }
+    html:not(#page-login):not(#page-add-user) main article ul.links {
+      background: #332f55;
+      margin: 1em -1em -1em -1em;
+      padding: 0.5em 1em; }
+      html:not(#page-login):not(#page-add-user) main article ul.links a {
+        font-size: 0;
+        padding-right: 1rem; }
+        html:not(#page-login):not(#page-add-user) main article ul.links a:before {
+          font-family: Fork-Awesome;
+          font-size: 1rem; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.update a:before {
+        content: '\f021'; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.share a:before {
+        content: '\f1e0'; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.delete a:before {
+        content: '\f1f8'; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.add a:before {
+        content: '\f055'; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.add-user a:before {
+        content: '\f234'; }
+      html:not(#page-login):not(#page-add-user) main article ul.links li.quit a:before {
+        content: '\f08b'; }
+
+.links {
+  align-items: center;
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%; }
+  .links a {
+    text-decoration: inherit; }
+
+label.visible {
+  color: #ff3669;
+  cursor: pointer;
+  font-size: 0;
+  position: absolute;
+  right: 1rem;
+  top: 1rem; }
+  label.visible:before {
+    content: '\f06e';
+    font-family: Fork-Awesome;
+    font-size: 1rem; }
+
+input.visible {
+  display: none; }
+  input.visible:checked ~ label.visible:before {
+    content: '\f070'; }
+
+.total {
+  background: #ff3669;
+  border-radius: 100%;
+  color: #332f55;
+  font-size: 0.5em;
+  line-height: 2.5em;
+  margin-left: auto;
+  text-align: center;
+  width: 2.5em; }
+
+#page-display-passwords main, #page-display-groups-passwords main {
+  columns: 15em;
+  column-gap: 2em; }
+  #page-display-passwords main article, #page-display-groups-passwords main article {
+    break-inside: avoid-column;
+    width: auto !important; }
+
+#page-login h1, #page-add-user h1 {
+  background: #1f2233;
+  bottom: 0;
+  color: #ff3669;
+  left: 0;
+  line-height: 100vh;
+  margin: 0;
+  position: absolute;
+  right: 60%;
+  text-align: center;
+  text-transform: uppercase;
+  top: 0; }
+
+#page-login main, #page-add-user main {
+  align-items: center;
+  background: #2b2947;
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  height: 84vh;
+  justify-content: center;
+  margin: 8vh 8vh 8vh 0;
+  padding-left: 40%; }
+  #page-login main form, #page-add-user main form {
+    width: 40%; }
+    #page-login main form input[type=submit], #page-add-user main form input[type=submit] {
+      font-weight: 600; }
+  #page-login main .links, #page-add-user main .links {
+    margin: 2em 0;
+    text-transform: uppercase; }
+    #page-login main .links a, #page-add-user main .links a {
+      padding: 0.5em; }
 
 /*# sourceMappingURL=style.css.map */

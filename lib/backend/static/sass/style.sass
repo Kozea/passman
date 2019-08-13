@@ -1,2 +1,347 @@
-input
+$background: #1f2233
+$notes: #2b2947
+$input: #332f55
+$label: #c4bcff
+$highlight: #ff3669
+$text: #ffffff
+
+$menu-size: 7em
+
+
+@import url('https://fonts.googleapis.com/css?family=Work+Sans:400,600')
+
+@font-face
+  font-family: Fork-Awesome
+  src: url(https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/fonts/forkawesome-webfont.ttf)
+
+@keyframes sweep
+  0%
+    margin-left: -1em
+    opacity: 0
+
+  100%
+    margin-left: 0
+    opacity: 1
+
+
+html
+  font-size: 400
+  overflow: auto
+
+body
+  background: $background
+  color: $text
+  font-family: Work Sans
+  flex-direction: column
+  margin: 0
+  height: 100vh
+  overflow-y: auto
+
+html:not(#page-login):not(#page-add-user) h1
+  bottom: -$menu-size
+  color: $highlight
+  font-size: 1em
+  left: 0
+  line-height: $menu-size
+  margin: 0
+  position: absolute
+  text-align: center
+  text-transform: uppercase
+  transform: rotate(-90deg)
+  transform-origin: 0 0
+  width: 100vh
+  z-index: 2
+
+h2
+  font-size: 1.2em
+
+h3
+  font-size: 1em
+  margin: 0
+
+a
+  color: $highlight
+  outline: none
+
+input, select
   display: block
+
+form
+  label
+    color: $label
+    display: block
+    font-variant: small-caps
+    margin: 1em 0
+    text-transform: lowercase
+
+  input, select
+    background: $input
+    border: 0 solid transparent
+    border-bottom-width: 1px
+    border-radius: 0
+    box-sizing: border-box
+    color: $text
+    margin: 0.5em 0 1em
+    padding: 0.5em
+    transition: border-color 0.5s
+    -webkit-appearance: none
+    width: 100%
+
+    &:active, &:focus
+      border-color: $highlight
+
+    &[type=submit]
+      background: $highlight
+      color: $background
+      text-transform: uppercase
+
+    &[type=checkbox]
+      border-width: 1px
+      display: inline-block
+      float: left
+      height: 1em
+      margin: 0.2em 0.5em 0 0
+      width: 1em
+
+      &:checked
+        background: $highlight
+
+
+aside
+  background: $highlight
+  color: $background
+  position: absolute
+  right: 3em
+  top: 3em
+  width: 20em
+  z-index: 3
+
+  ul
+    list-style: none
+    margin: 0
+    padding: 0
+
+    li
+      margin: 1em
+      text-align: center
+
+body > nav
+  text-transform: lowercase
+
+  ul
+    align-items: center
+    background: $notes
+    height: $menu-size
+    justify-content: center
+    position: absolute
+    z-index: 1
+
+    li.active a
+      color: $highlight
+
+    a
+      color: $text
+      display: block
+      font-weight: 600
+      padding: 1em
+
+    &:last-child
+      bottom: 0
+
+html:not(#page-login):not(#page-add-user) main
+  padding: calc(5em + #{$menu-size}) 10em
+
+  nav ul
+    justify-content: center
+    left: 0
+    position: absolute
+    right: 0
+    top: $menu-size - 1em
+    z-index: 2
+
+    a
+      font-size: 0
+
+      &:before
+        background: $highlight
+        border-radius: 3em
+        color: $background
+        content: '+'
+        display: block
+        font-size: 1rem
+        line-height: 2em
+        margin: 0 0.5em
+        text-align: center
+        width: 2em
+
+  dl
+    height: 0
+    margin: 0
+    overflow: hidden
+
+    dt
+      color: $label
+      font-variant: small-caps
+      padding: 1em 0.25em 0.25em
+      text-transform: lowercase
+
+    dd
+      background: $input
+      margin-left: 0
+      padding: 0.5em
+
+  input:checked ~ dl
+    animation: sweep 0.5s ease-in-out
+    height: auto
+    margin: 0 0 1em
+
+  input:checked ~ section
+    animation: sweep 0.5s ease-in-out
+    height: auto
+    padding: 0.5em
+
+  article
+    background: $notes
+    margin: 0 auto 2em
+    overflow: auto
+    padding: 1em
+    position: relative
+    width: 50%
+
+    section
+      height: 0
+      overflow: hidden
+      position: relative
+
+      label.visible
+        right: 0.75rem
+        top: 0.75rem
+
+        &:before
+          font-size: 0.75rem
+
+      ul.links
+        margin: 0.5em 0 0
+        padding: 0.25em 0.5em
+
+    h2
+      margin: 0 2em 0 0
+
+    ul.links
+      background: $input
+      margin: 1em -1em -1em -1em
+      padding: 0.5em 1em
+
+      a
+        font-size: 0
+        padding-right: 1rem
+
+        &:before
+          font-family: Fork-Awesome
+          font-size: 1rem
+
+      li.update a:before
+        content: '\f021'
+
+      li.share a:before
+        content: '\f1e0'
+
+      li.delete a:before
+        content: '\f1f8'
+
+      li.add a:before
+        content: '\f055'
+
+      li.add-user a:before
+        content: '\f234'
+
+      li.quit a:before
+        content: '\f08b'
+
+.links
+  align-items: center
+  display: flex
+  list-style: none
+  margin: 0
+  padding: 0
+  width: 100%
+
+  a
+    text-decoration: inherit
+
+label.visible
+  color: $highlight
+  cursor: pointer
+  font-size: 0
+  position: absolute
+  right: 1rem
+  top: 1rem
+
+  &:before
+    content: '\f06e'
+    font-family: Fork-Awesome
+    font-size: 1rem
+
+input.visible
+  display: none
+
+  &:checked ~ label.visible:before
+    content: '\f070'
+
+.total
+  background: $highlight
+  border-radius: 100%
+  color: $input
+  font-size: 0.5em
+  line-height: 2.5em
+  margin-left: auto
+  text-align: center
+  width: 2.5em
+
+
+#page-display-passwords, #page-display-groups-passwords
+  main
+    columns: 15em
+    column-gap: 2em
+
+    article
+      break-inside: avoid-column
+      width: auto !important
+
+#page-login, #page-add-user
+  h1
+    background: $background
+    bottom: 0
+    color: $highlight
+    left: 0
+    line-height: 100vh
+    margin: 0
+    position: absolute
+    right: 60%
+    text-align: center
+    text-transform: uppercase
+    top: 0
+
+  main
+    align-items: center
+    background: $notes
+    display: flex
+    flex-direction: column
+    font-weight: 600
+    height: 84vh
+    justify-content: center
+    margin: 8vh 8vh 8vh 0
+    padding-left: 40%
+
+    form
+      width: 40%
+
+      input[type=submit]
+        font-weight: 600
+
+    .links
+      margin: 2em 0
+      text-transform: uppercase
+
+      a
+        padding: 0.5em
