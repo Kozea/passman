@@ -56,10 +56,12 @@ html:not(#page-login):not(#page-add-user) h1
 h2
   font-size: 1.2em
   line-height: 1em
+  overflow: hidden
 
 h3
   font-size: 1em
   margin: 0
+  overflow: hidden
 
 a
   color: $highlight
@@ -95,6 +97,7 @@ form
     &[type=submit]
       background: $highlight
       color: $background
+      cursor: pointer
       text-transform: uppercase
 
     &[type=checkbox]
@@ -191,6 +194,7 @@ html:not(#page-login):not(#page-add-user) main
     dd
       background: $input
       margin-left: 0
+      overflow-y: auto
       padding: 0.5em
 
   input:checked ~ dl
@@ -207,9 +211,9 @@ html:not(#page-login):not(#page-add-user) main
     background: $notes
     margin: 0 auto 2em
     overflow: auto
-    padding: 1em
+    padding: 3em 10%
     position: relative
-    width: 50%
+    width: 60%
 
     section
       height: 0
@@ -226,14 +230,16 @@ html:not(#page-login):not(#page-add-user) main
       ul.links
         margin: 0.5em 0 0
         padding: 0.25em 0.5em
+        position: relative
 
-    h2
+    h2, h3
       margin: 0 2em 0 0
 
     ul.links
       background: $input
       margin: 1em -1em -1em -1em
       padding: 0.5em 1em
+      position: relative
 
       a
         font-size: 0
@@ -309,9 +315,13 @@ input.visible
 
     article
       break-inside: avoid-column
+      padding: 1em !important
       width: auto !important
 
 #page-login, #page-add-user
+  a
+    color: $text
+
   h1
     background: $background
     bottom: 0

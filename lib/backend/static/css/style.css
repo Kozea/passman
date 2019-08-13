@@ -44,11 +44,13 @@ html:not(#page-login):not(#page-add-user) h1 {
 
 h2 {
   font-size: 1.2em;
-  line-height: 1em; }
+  line-height: 1em;
+  overflow: hidden; }
 
 h3 {
   font-size: 1em;
-  margin: 0; }
+  margin: 0;
+  overflow: hidden; }
 
 a {
   color: #ff3669;
@@ -81,6 +83,7 @@ form input, form select {
   form input[type=submit], form select[type=submit] {
     background: #ff3669;
     color: #1f2233;
+    cursor: pointer;
     text-transform: uppercase; }
   form input[type=checkbox], form select[type=checkbox] {
     border-width: 1px;
@@ -162,6 +165,7 @@ html:not(#page-login):not(#page-add-user) main {
     html:not(#page-login):not(#page-add-user) main dl dd {
       background: #332f55;
       margin-left: 0;
+      overflow-y: auto;
       padding: 0.5em; }
   html:not(#page-login):not(#page-add-user) main input:checked ~ dl {
     animation: sweep 0.5s ease-in-out;
@@ -175,9 +179,9 @@ html:not(#page-login):not(#page-add-user) main {
     background: #2b2947;
     margin: 0 auto 2em;
     overflow: auto;
-    padding: 1em;
+    padding: 3em 10%;
     position: relative;
-    width: 50%; }
+    width: 60%; }
     html:not(#page-login):not(#page-add-user) main article section {
       height: 0;
       overflow: hidden;
@@ -189,13 +193,15 @@ html:not(#page-login):not(#page-add-user) main {
           font-size: 0.75rem; }
       html:not(#page-login):not(#page-add-user) main article section ul.links {
         margin: 0.5em 0 0;
-        padding: 0.25em 0.5em; }
-    html:not(#page-login):not(#page-add-user) main article h2 {
+        padding: 0.25em 0.5em;
+        position: relative; }
+    html:not(#page-login):not(#page-add-user) main article h2, html:not(#page-login):not(#page-add-user) main article h3 {
       margin: 0 2em 0 0; }
     html:not(#page-login):not(#page-add-user) main article ul.links {
       background: #332f55;
       margin: 1em -1em -1em -1em;
-      padding: 0.5em 1em; }
+      padding: 0.5em 1em;
+      position: relative; }
       html:not(#page-login):not(#page-add-user) main article ul.links a {
         font-size: 0;
         padding-right: 1rem; }
@@ -257,7 +263,11 @@ input.visible {
   column-gap: 2em; }
   #page-display-passwords main article, #page-display-groups-passwords main article {
     break-inside: avoid-column;
+    padding: 1em !important;
     width: auto !important; }
+
+#page-login a, #page-add-user a {
+  color: #ffffff; }
 
 #page-login h1, #page-add-user h1 {
   background: #1f2233;
