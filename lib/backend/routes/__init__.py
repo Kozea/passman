@@ -77,7 +77,10 @@ def edit_password(password_id, group_id=None):
         password = g.session.query(Password).get(password_id)
         update_password(password, password_items)
         g.session.commit()
-        return redirect(url_for('display_passwords'))
+        if request.endpoint == 'edit_group_password':
+            return redirect(url_for('display_groups_passwords'))
+        else:
+            return redirect(url_for('display_passwords'))
 
     encrypted_password = g.session.query(Password).get(password_id)
     password = decrypt_password(encrypted_password, session['private_key'])
@@ -134,7 +137,10 @@ def add_password(group_id=None):
                 g.session.add(Password(**password))
 
         g.session.commit()
-        return redirect(url_for('display_passwords'))
+        if request.endpoint == 'add_group_password' or group:
+            return redirect(url_for('display_groups_passwords'))
+        else:
+            return redirect(url_for('display_passwords'))
 
     return render_template('password.html.jinja2', form=form)
 
@@ -150,7 +156,7 @@ def delete_group(group_id):
     if request.method == 'POST':
         g.session.delete(group)
         g.session.commit()
-        return redirect(url_for('display_passwords'))
+        return redirect(url_for('display_groups_passwords'))
 
     return render_template('delete.html.jinja2', group=group)
 
@@ -268,7 +274,7 @@ def add_user_group(group_id):
                 g.session.add(Password(**password_attributes))
             g.session.commit()
 
-        return redirect(url_for('display_passwords'))
+        return redirect(url_for('display_groups_passwords'))
 
     return render_template('add_user_group.html.jinja2', form=form)
 
@@ -289,7 +295,7 @@ def quit_group(group_id):
         group.users.remove(g.session.query(User).get(session['user_id']))
         g.session.commit()
 
-        return redirect(url_for('display_passwords'))
+        return redirect(url_for('display_groups_passwords'))
 
     return render_template('quit_group.html.jinja2', group=group)
 
