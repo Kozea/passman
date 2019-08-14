@@ -123,7 +123,7 @@ def test_delete_password_from_group(http, db_session):
 
 
 def test_edit_password(http):
-    data_password = {
+    data = {
         'label': 'new label',
         'login': 'login',
         'password': 'password',
@@ -132,8 +132,7 @@ def test_edit_password(http):
 
     response = http.get('/edit_password/1')
     assert response.status_code == 403
-    response = http.post(
-        '/edit_password/1', data=data_password, follow_redirects=True)
+    response = http.post('/edit_password/1', data=data, follow_redirects=True)
     assert response.status_code == 403
 
     login(http, 'test')
@@ -143,12 +142,19 @@ def test_edit_password(http):
     assert 'question' in page_data
     response = http.get('/edit_password/1')
     assert response.status_code == 200
-    response = http.post(
-        '/edit_password/1', data=data_password, follow_redirects=True)
+    response = http.post('/edit_password/1', data=data, follow_redirects=True)
     assert response.status_code == 200
     page_data = response.data.decode('utf-8')
     assert 'new label' in page_data
     assert 'super notes' in page_data
+
+    data['label'] = 'wow such label'
+    http.post('/share_password_group/1', data={'group_1': True})
+    response = http.post(
+        '/edit_password/1/1', data=data, follow_redirects=True)
+    assert response.status_code == 200
+    page_data = response.data.decode('utf-8')
+    assert 'wow such label' in page_data
 
 
 def test_share_password_group(http):
@@ -206,9 +212,6 @@ def test_add_password(http):
     data['group_id'] = 1
     response = http.post('/add_password', data=data, follow_redirects=True)
     assert response.status_code == 200
-    page_data = response.data.decode('utf-8')
-    assert 'hey oh' not in page_data
-    response = http.get('/display_groups_passwords')
     page_data = response.data.decode('utf-8')
     assert 'hey oh' in page_data
 

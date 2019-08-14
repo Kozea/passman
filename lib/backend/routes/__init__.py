@@ -129,7 +129,9 @@ def add_password(group_id=None):
         password = Password(**create_password(user, password_items))
         g.session.add(password)
 
-        if request.form.get('group_id'):
+        group_id = request.form.get('group_id')
+
+        if group_id:
             group = g.session.query(Group).get(request.form.get('group_id'))
             password_to_add = share_to_group(
                 password, group, user, session['private_key'])
@@ -137,7 +139,7 @@ def add_password(group_id=None):
                 g.session.add(Password(**password))
 
         g.session.commit()
-        if request.endpoint == 'add_group_password' or group:
+        if request.endpoint == 'add_group_password' or group_id:
             return redirect(url_for('display_groups_passwords'))
         else:
             return redirect(url_for('display_passwords'))
