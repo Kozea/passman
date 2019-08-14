@@ -79,7 +79,7 @@ def edit_password(password_id):
     password = decrypt_password(encrypted_password, session['private_key'])
     for attribute in attributes:
         setattr(getattr(form, attribute), 'data', password[attribute])
-    return render_template('password.html.jinja2', form=form)
+    return render_template('password.html.jinja2', form=form, edit=True)
 
 
 @app.route('/share_password_group/<int:password_id>', methods=['GET', 'POST'])
