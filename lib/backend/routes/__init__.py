@@ -61,13 +61,11 @@ def delete_password(password_id):
 
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
 @app.route(
-    '/edit_password/<int:password_id>/<int:group_id>', methods=['GET', 'POST'])
+    '/edit_password/<int:password_id>/<int:group_id>', methods=['GET', 'POST'],
+    endpoint='edit_group_password')
 @allow_if(Is.connected)
 def edit_password(password_id, group_id=None):
-    if group_id:
-        form = PasswordGroupForm(request.form or None)
-    else:
-        form = PasswordForm(request.form or None)
+    form = PasswordGroupForm(request.form or None)
 
     attributes = ('label', 'login', 'password', 'notes')
 
@@ -112,7 +110,9 @@ def share_password_group(password_id):
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
-@app.route('/add_password/<int:group_id>', methods=['GET', 'POST'])
+@app.route(
+    '/add_password/<int:group_id>', methods=['GET', 'POST'],
+    endpoint='add_group_password')
 @allow_if(Is.connected)
 def add_password(group_id=None):
     form = PasswordForm(request.form or None, data={'group_id': group_id})

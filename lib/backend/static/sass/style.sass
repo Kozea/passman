@@ -319,8 +319,12 @@ input.visible
       width: auto !important
 
 #page-login, #page-add-user
-  a
-    color: $text
+  li
+    a
+      color: $text
+
+    &.active a
+      color: $highlight
 
   h1
     background: $background

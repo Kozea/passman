@@ -266,8 +266,11 @@ input.visible {
     padding: 1em !important;
     width: auto !important; }
 
-#page-login a, #page-add-user a {
+#page-login li a, #page-add-user li a {
   color: #ffffff; }
+
+#page-login li.active a, #page-add-user li.active a {
+  color: #ff3669; }
 
 #page-login h1, #page-add-user h1 {
   background: #1f2233;

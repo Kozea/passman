@@ -10,10 +10,10 @@
   {% else %}
     <nav>
       <ul class="links">
-        <li>
+        <li class="{{ 'active' if request.endpoint == 'login' }}">
           <a href="{{ url_for('login') }}">Se connecter</a>
         </li>
-        <li>
+        <li class="{{ 'active' if request.endpoint == 'add_user' }}">
           <a href="{{ url_for('add_user') }}">Créer un compte</a>
         </li>
       </ul>

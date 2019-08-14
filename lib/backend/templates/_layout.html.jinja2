@@ -13,18 +13,21 @@
     {% if g.context.user %}
       <nav>
         <ul class="links">
-          <li>
+          <li class="{{ 'active' if request.endpoint in
+            ('display_passwords', 'delete_password', 'edit_password', 'share_password_group', 'add_password') }}">
             <a href="{{ url_for('display_passwords') }}">Mes notes</a>
           </li>
-          <li>
+          <li class="{{ 'active' if request.endpoint in
+            ('display_groups_passwords', 'delete_password_from_group','edit_group_password', 'add_group_password',
+            'delete_group', 'edit_group', 'add_group', 'add_user_group', 'quit_group') }}">
             <a href="{{ url_for('display_groups_passwords') }}">Groupes</a>
           </li>
         </ul>
         <ul class="links">
-          <li>
+          <li class="{{ 'active' if request.endpoint in ('login', 'delete_user', 'edit_user') }}">
             <a href="{{ url_for('edit_user') }}">Mon profil</a>
           </li>
-          <li>
+          <li class="{{ 'active' if request.endpoint == 'logout' }}">
             <a href="{{ url_for('logout') }}">Me déconnecter</a>
           </li>
         </ul>
