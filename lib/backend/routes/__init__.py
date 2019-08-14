@@ -101,7 +101,7 @@ def share_password_group(password_id):
                 g.session.commit()
         return redirect(url_for('display_passwords'))
 
-    return render_template('share_password_group.html', form=form)
+    return render_template('share_password_group.html.jinja2', form=form)
 
 
 @app.route('/add_password', methods=['GET', 'POST'])
@@ -263,7 +263,7 @@ def add_user_group(group_id):
 
         return redirect(url_for('display_passwords'))
 
-    return render_template('add_user_group.html', form=form)
+    return render_template('add_user_group.html.jinja2', form=form)
 
 
 @app.route('/quit_group/<int:group_id>', methods=['GET', 'POST'])
@@ -284,7 +284,7 @@ def quit_group(group_id):
 
         return redirect(url_for('display_passwords'))
 
-    return render_template('quit_group.html', group=group)
+    return render_template('quit_group.html.jinja2', group=group)
 
 
 @app.route('/logout')
@@ -321,7 +321,7 @@ def display_passwords():
             for password in passwords if not password.groups
         ]
         return render_template(
-            'display_passwords.html', passwords=decrypted_passwords
+            'display_passwords.html.jinja2', passwords=decrypted_passwords
         )
     else:
         return redirect(url_for('login'))
@@ -343,4 +343,5 @@ def display_groups_passwords():
             'total_members': len(group.users),
         }
     return render_template(
-        'display_groups_passwords.html', groups_passwords=groups_passwords)
+        'display_groups_passwords.html.jinja2',
+        groups_passwords=groups_passwords)
