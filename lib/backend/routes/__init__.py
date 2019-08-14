@@ -7,8 +7,8 @@ from .. import app
 from ..model import Group, Password, User
 from ..utils import acl as Is
 from ..utils.forms import (
-    EditUserForm, GroupForm, PasswordForm, SharePasswordForm, UserForm,
-    UserGroupForm)
+    EditUserForm, GroupForm, PasswordForm, PasswordGroupForm,
+    SharePasswordForm, UserForm, UserGroupForm)
 from ..utils.utils import (
     create_password, create_user, decrypt_password, decrypt_private_key,
     share_to_group, share_to_user, update_password, update_user, user_exists)
@@ -60,9 +60,15 @@ def delete_password(password_id):
 
 
 @app.route('/edit_password/<int:password_id>', methods=['GET', 'POST'])
+@app.route(
+    '/edit_password/<int:password_id>/<int:group_id>', methods=['GET', 'POST'])
 @allow_if(Is.connected)
-def edit_password(password_id):
-    form = PasswordForm(request.form or None)
+def edit_password(password_id, group_id=None):
+    if group_id:
+        form = PasswordGroupForm(request.form or None)
+    else:
+        form = PasswordForm(request.form or None)
+
     attributes = ('label', 'login', 'password', 'notes')
 
     if request.method == 'POST' and form.validate():
@@ -79,6 +85,7 @@ def edit_password(password_id):
     password = decrypt_password(encrypted_password, session['private_key'])
     for attribute in attributes:
         setattr(getattr(form, attribute), 'data', password[attribute])
+
     return render_template('password.html.jinja2', form=form, edit=True)
 
 

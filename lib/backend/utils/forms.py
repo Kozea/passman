@@ -20,6 +20,13 @@ class GroupForm(Form):
     label = StringField('Nom', [DataRequired()])
 
 
+class PasswordGroupForm(Form):
+    label = StringField('Nom', [DataRequired()])
+    login = StringField('Identifiant', [DataRequired()])
+    password = StringField('Mot de passe', [DataRequired()])
+    notes = StringField('Notes', [Optional()])
+
+
 class PasswordForm(Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
