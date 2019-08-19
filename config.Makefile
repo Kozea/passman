@@ -13,3 +13,5 @@ PYTHON_VERSION ?= python
 PIPENV ?= $(shell command -v pipenv 2> /dev/null)
 VENV = $(PWD)/.venv
 export PIPENV_VENV_IN_PROJECT = 1
+
+URL_PROD = https://passman.kozea.fr
