@@ -1,19 +1,33 @@
 import locale
-import logging
 import os
 import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import Flask
+from flask import Flask, g, session
+from flask_alcool import Alcool
+from sqlalchemy.engine import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from .model import db
+from .model import User
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 app = Flask(__name__)
 app.config.from_envvar('FLASK_CONFIG')
-db.init_app(app)
+Alcool(app)
+
+
+if app.config.get('DEBUG'):  # pragma: no cover
+    from sassutils.wsgi import SassMiddleware
+    app.wsgi_app = SassMiddleware(app.wsgi_app, {
+        'lib.backend': {
+            'sass_path': 'static/sass',
+            'css_path': 'static/css',
+            'wsgi_path': '/static/css',
+            'strip_extension': True,
+        }
+    })
 
 
 def drop_db():
@@ -34,19 +48,21 @@ app.cli.command()(install_dev_data)
 app.cli.command()(drop_db)
 
 
-if app.debug:
-    level = (
-        logging.INFO
-        if os.getenv('PYTHON_VERBOSE', os.getenv('VERBOSE'))
-        else logging.WARNING
-    )
-    app.logger.setLevel(level)
-    logging.getLogger('sqlalchemy').setLevel(level)
-    logging.getLogger('sqlalchemy').handlers = logging.getLogger(
-        'werkzeug'
-    ).handlers
-    logging.getLogger('sqlalchemy.orm').setLevel(logging.WARNING)
-    if level == logging.WARNING:
-        logging.getLogger('werkzeug').setLevel(level)
+@app.before_request
+def before_request():
+    g.context = {}
+    db = app.config['DB']
+    g.session = sessionmaker(bind=create_engine(db), autoflush=False)()
+    if 'user_id' in session:
+        g.context['user'] = g.session.query(User).get(session['user_id'])
+    else:
+        g.context['user'] = None
+
+
+@app.after_request
+def after_request(response):
+    g.session.close()
+    return response
+
 
 from .routes import *  # noqa isort:skip

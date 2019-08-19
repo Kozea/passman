@@ -1,0 +1,44 @@
+{% extends '_layout.html.jinja2' %}
+
+{% set action = 'login' if login else 'add_user' if add_user else 'edit_user' %}
+{% set label = 'Se connecter' if login else 'Créer mon compte' if add_user else 'Mettre à jour' %}
+
+{% block content %}
+  {% if edit_user %}
+    <article>
+      <h2>Mettre à jour mon profil</h2>
+  {% else %}
+    <nav>
+      <ul class="links">
+        <li class="{{ 'active' if request.endpoint == 'login' }}">
+          <a href="{{ url_for('login') }}">Se connecter</a>
+        </li>
+        <li class="{{ 'active' if request.endpoint == 'add_user' }}">
+          <a href="{{ url_for('add_user') }}">Créer un compte</a>
+        </li>
+      </ul>
+    </nav>
+  {% endif %}
+
+  <form action="{{ url_for(action) }}" method="POST">
+    {{ display_form(form) }}
+    <input type="submit" value="{{ label }}"/>
+  </form>
+
+  {% if edit_user %}
+    </article>
+  {% endif %}
+
+  {% if edit_user %}
+    <article>
+      <h2>Supprimer mon profil</h2>
+      <form action="{{ url_for('delete_user') }}" method="POST">
+        <label>
+          <input type="checkbox" name="confirm" required />
+          Votre compte va être supprimé.
+        </label>
+        <input type="submit" value="Supprimer mon compte"/>
+      </form>
+    </article>
+  {% endif %}
+{% endblock content %}
