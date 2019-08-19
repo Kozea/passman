@@ -1,0 +1,12 @@
+{% extends '_layout.html.jinja2' %}
+
+{% block content %}
+  <article>
+    <h2>{{ "Mettre à jour le groupe" if edit else "Nouveau groupe" }}</h2>
+
+    <form method="POST">
+      {{ display_form(form) }}
+      <input type="submit" value="{{ 'Mettre à jour' if edit else 'Créer' }}"/>
+    </form>
+  </article>
+{% endblock %}
