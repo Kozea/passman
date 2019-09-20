@@ -10,7 +10,7 @@ stages:
       - .venv/
 
 .image_test: &image_test
-  image: paradoxxxzero/python-node-yarn-postgresql:latest
+  image: kozea/python-node-yarn-postgresql:latest
 
 .retry: &retry
   retry: 1
@@ -41,7 +41,7 @@ test:
 
 
 .image: &image_deploy_jobs
-  image: grewn0uille/deploy-tools:latest
+  image: kozea/deploy-tools:latest
 
 deploy_test:
   <<: *image_deploy_jobs
