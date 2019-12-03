@@ -1,6 +1,5 @@
 from flask import g, session
-from wtforms import (
-    BooleanField, Form, PasswordField, SelectField, StringField)
+from wtforms import BooleanField, Form, PasswordField, SelectField, StringField
 from wtforms.validators import DataRequired, Optional, ValidationError
 
 from ..model import Group, User
