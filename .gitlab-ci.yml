@@ -1,3 +1,11 @@
+include:
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.variables-images.yml'
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.ci-install.yml'
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.ci-test.yml'
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.ci-lint.yml'
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.ci-deploy-test.yml'
+  - remote: 'https://gitlab.com/Kozea/ci-master/raw/master/.ci-deploy-prod.yml'
+
 stages:
   - install
   - test
@@ -9,52 +17,5 @@ stages:
     paths:
       - .venv/
 
-.image_test: &image_test
-  image: kozea/python-node-yarn-postgresql:latest
-
-.retry: &retry
-  retry: 1
-
 install:
-  stage: install
-  <<: *image_test
-  script:
-    - make install
   <<: *artifacts
-
-lint:
-  stage: test
-  <<: *image_test
-  script: make lint
-  <<: *retry
-  dependencies:
-    - install
-
-test:
- stage: test
- <<: *image_test
- script:
-   - make check
- <<: *retry
- dependencies:
-   - install
-
-
-.image: &image_deploy_jobs
-  image: kozea/deploy-tools:latest
-
-deploy_test:
-  <<: *image_deploy_jobs
-  stage: deploy_test
-  script:
-    - make deploy-test
-  dependencies: []
-
-deploy_prod:
-  <<: *image_deploy_jobs
-  stage: deploy_prod
-  script:
-    - make deploy-prod
-  dependencies: []
-  only:
-    - master
